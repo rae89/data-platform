@@ -13,7 +13,7 @@
 ## Checks
 
 - [ ] `just check` passes
-- [ ] `just test` passes
+- [ ] `just cov` passes (coverage ≥ 99%)
 - [ ] `docs/architecture.svg` updated if a component, service or data flow changed
 - [ ] `README.md`, `AGENTS.md`, `TODO.md` updated if affected
 
