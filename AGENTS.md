@@ -50,6 +50,9 @@ After changing dbt models, run `just defs-state` (and `just check`).
   diagram; if you add or remove a component, update it and run `just diagram`.
 - `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`just dev`): instance
   config. Keep both in sync.
+- `.claude/settings.json`: Claude Code plugins for this repo (ponytail,
+  i-have-adhd). Claude Code offers to install them when you trust the folder.
+- `.github/pull_request_template.md`: PR description layout.
 
 ## Rules and gotchas
 
@@ -93,6 +96,24 @@ reason and checkbox steps.
   checked, remove the item.
 - If you find follow-up work you won't do now (bugs, gaps, missing tests), add it as
   a new item rather than leaving TODO comments in code.
+
+## Writing PRs and docs
+
+PR descriptions, commit messages, `README.md`, `docs/` and package READMEs follow
+the [i-have-adhd](https://github.com/ayghri/i-have-adhd) style, so a reader can act
+after reading only the top. In Claude Code, `/i-have-adhd` applies the same rules.
+
+- **Outcome first.** The first line says what now works or what to do. No preamble.
+- **Number multi-step tasks.** One bounded action per step, fewest steps that work.
+- **Show how to try it.** A command, URL or file path the reader can use right away.
+- **Specific, not vague.** Concrete time estimates and numbers ("about 10 minutes",
+  "6 assets"), never "some work" or "a few".
+- **At most 5 items per list.** Group and rank the rest.
+- **No recaps or closing lines.** End when the content ends. State errors and risks
+  plainly: cause, then fix.
+
+When creating a PR (including with `gh pr create --body`), read
+`.github/pull_request_template.md` first and fill in every section.
 
 ## Before finishing a change
 

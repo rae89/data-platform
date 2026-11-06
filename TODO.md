@@ -54,3 +54,12 @@ run page.
 - [ ] Later, once ingestion pulls from real sources: add live OpenTelemetry spans in
       `defs/ingest.py` (auto-instrument `requests` and DB drivers) to see individual
       API calls and retries.
+
+## Rewrite existing docs in the PRs-and-docs style
+
+`AGENTS.md` now asks for outcome-first docs, but `README.md` and the package README
+predate the rule.
+
+- [ ] Rewrite `README.md` so the first lines say what the platform does and how to
+      start it, following "Writing PRs and docs" in `AGENTS.md`.
+- [ ] Do the same for `packages/dagster-victoria-sli/README.md`.
