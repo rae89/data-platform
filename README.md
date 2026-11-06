@@ -12,8 +12,11 @@ Dagster ──runs──> ingest assets ──> DuckDB (data/warehouse.duckdb) <
 
 ## Quick start
 
+Commands are [`just`](https://github.com/casey/just) recipes (`brew install just`,
+or `uv tool install rust-just`). Run `just` to list them.
+
 ```bash
-make up
+just up
 ```
 
 | Service          | URL                    |
@@ -27,7 +30,7 @@ make up
 The `refresh_all` job runs every hour. To run it now, open Dagster, go to
 Jobs → refresh_all → Materialize all.
 
-For local development with hot reload, run `make dev` (`dg dev`). It runs Dagster
+For local development with hot reload, run `just dev` (`dg dev`). It runs Dagster
 on your machine against the same Victoria stack and the same DuckDB file.
 
 ## Dagster project (dg)
@@ -61,7 +64,7 @@ src/data_platform/
 packages/dagster-victoria-sli/  shared package: SliSensorsComponent and VictoriaLogsHandler
 vmalert/rules.yml            SLI recording rules and SLO alerts
 grafana/                     datasources and the SLI dashboard
-dagster_home/dagster.yaml    Dagster config for `make dev`
+dagster_home/dagster.yaml    Dagster config for `just dev`
 docker/dagster.yaml          Dagster config inside Docker
 ```
 
@@ -110,8 +113,8 @@ service:dagster job:refresh_all | stats by (event_type) count()
 - DuckDB allows only one process to write at a time. Jobs use the in-process
   executor for that reason. When you open the file yourself while Dagster runs,
   open it read-only: `duckdb -readonly data/warehouse.duckdb`.
-- After changing dbt models, `make dev` re-parses automatically. For Docker,
-  rebuild with `make up`.
+- After changing dbt models, `just dev` re-parses automatically. For Docker,
+  rebuild with `just up`.
 - Runs started with `dg launch` execute inside the CLI process and aren't tied to
   the code location, so the run success and duration SLIs skip them. Asset SLIs
   still update. Launch from the UI or let the schedule run them to count toward

@@ -12,20 +12,22 @@ vmalert, and Grafana shows all of it.
 
 ## Commands
 
-Python 3.12, managed with `uv`. Run tools through `uv run`.
+Python 3.12, managed with `uv`. Run tools through `uv run`. Project commands are
+`just` recipes in `justfile` (`just --list` shows them all). If `just` isn't
+installed, run recipes with `uvx --from rust-just just <recipe>`.
 
 ```bash
-make up            # everything in Docker (Dagster :3000, Grafana :3001)
-make infra         # only the Victoria stack + Grafana
-make dev           # infra + local Dagster with hot reload (uv run dg dev)
-make check         # validate definitions and component YAML (uv run dg check defs)
-make defs-state    # re-parse dbt after changing models
-uv run pytest packages/dagster-victoria-sli/tests   # tests
-uv run dg list defs                                 # list assets, checks, jobs, sensors
+just up              # everything in Docker (Dagster :3000, Grafana :3001)
+just infra           # only the Victoria stack + Grafana
+just dev             # infra + local Dagster with hot reload (uv run dg dev)
+just check           # validate definitions and component YAML (uv run dg check defs)
+just defs-state      # re-parse dbt after changing models
+just test            # tests (extra args go to pytest, e.g. just test -k sensor)
+uv run dg list defs  # list assets, checks, jobs, sensors
 ```
 
-After any change to Dagster definitions or component YAML, run `make check`.
-After changing dbt models, run `make defs-state` (and `make check`).
+After any change to Dagster definitions or component YAML, run `just check`.
+After changing dbt models, run `just defs-state` (and `just check`).
 
 ## Layout
 
@@ -43,7 +45,7 @@ After changing dbt models, run `make defs-state` (and `make check`).
   Keep it free of anything specific to this code location.
 - `vmalert/rules.yml`: SLI recording rules (`sli:*`) and SLO alerts.
 - `grafana/`: provisioned data sources and dashboards (JSON).
-- `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`make dev`): instance
+- `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`just dev`): instance
   config. Keep both in sync.
 
 ## Rules and gotchas
