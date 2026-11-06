@@ -67,3 +67,21 @@ After changing dbt models, run `just defs-state` (and `just check`).
   and the SLI table in `README.md` together.
 - Don't edit generated or runtime files: `dbt_project/target/`, `dbt_project/logs/`,
   `dagster_home/` storage and history, `data/`.
+
+## Planned work (`TODO.md`)
+
+`TODO.md` is the backlog, in priority order. Each item is a heading with a short
+reason and checkbox steps.
+
+- Check it before starting related work, and follow the plan there unless the user
+  asks for something different.
+- When you finish a step, check its box. When every box under a heading is
+  checked, remove the item.
+- If you find follow-up work you won't do now (bugs, gaps, missing tests), add it as
+  a new item rather than leaving TODO comments in code.
+
+## Before finishing a change
+
+- Use `just` recipes and `uv run dg ...` rather than calling `dagster` directly.
+- Run `just check` and `just test`, and report any failures.
+- Update `README.md`, this file and `TODO.md` if the change affects them.
