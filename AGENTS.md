@@ -23,6 +23,7 @@ just dev             # infra + local Dagster with hot reload (uv run dg dev)
 just check           # validate definitions and component YAML (uv run dg check defs)
 just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
+just diagram         # re-render docs diagrams (docs/diagram/*.mjs → docs/*.svg)
 uv run dg list defs  # list assets, checks, jobs, sensors
 ```
 
@@ -45,6 +46,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
   Keep it free of anything specific to this code location.
 - `vmalert/rules.yml`: SLI recording rules (`sli:*`) and SLO alerts.
 - `grafana/`: provisioned data sources and dashboards (JSON).
+- `docs/diagram/`: d3 scripts for docs diagrams. `architecture.mjs` draws the README
+  diagram; if you add or remove a component, update it and run `just diagram`.
 - `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`just dev`): instance
   config. Keep both in sync.
 
@@ -65,8 +68,19 @@ After changing dbt models, run `just defs-state` (and `just check`).
   and default to localhost.
 - If you rename or add a metric, update `vmalert/rules.yml`, the Grafana dashboards
   and the SLI table in `README.md` together.
+- **Documentation diagrams use d3.** For any diagram or flow chart in the docs
+  (README, `docs/`, package READMEs, Notion pages), don't use Mermaid, ASCII art or
+  image editors. This doesn't apply to Grafana dashboards or other runtime
+  visuals. Add one script per diagram, `docs/diagram/<name>.mjs` (copy
+  `architecture.mjs`), that writes `docs/<name>.svg`. Run `just diagram`, commit the
+  script and the SVG, and embed the SVG with `![alt text](docs/<name>.svg)`. READMEs
+  and Notion can't run d3, so always ship the static SVG.
+- **Keep `docs/architecture.svg` current on every commit.** Before committing, check
+  whether the change adds, removes or renames a component, service or data flow. If
+  it does, update `docs/diagram/architecture.mjs` and run `just diagram` in the same
+  commit.
 - Don't edit generated or runtime files: `dbt_project/target/`, `dbt_project/logs/`,
-  `dagster_home/` storage and history, `data/`.
+  `dagster_home/` storage and history, `data/`, `docs/*.svg` (regenerate them instead).
 
 ## Planned work (`TODO.md`)
 

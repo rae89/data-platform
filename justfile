@@ -41,3 +41,7 @@ logs:
 clean:
     docker compose down -v
     rm -rf data/*.duckdb* dbt_project/target src/data_platform/defs/.local_defs_state
+
+# Regenerate the d3 diagrams (docs/diagram/*.mjs → docs/*.svg)
+diagram:
+    cd docs/diagram && npm install --silent && for f in *.mjs; do node "$f"; done

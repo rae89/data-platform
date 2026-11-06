@@ -1,0 +1,8 @@
+{
+  "name": "data-platform-diagram",
+  "private": true,
+  "type": "module",
+  "description": "Renders docs/architecture.svg with d3. Run: just diagram",
+  "scripts": { "build": "node architecture.mjs" },
+  "dependencies": { "d3": "^7.9.0", "jsdom": "^26.1.0" }
+}

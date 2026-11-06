@@ -2,13 +2,10 @@
 
 dbt + Dagster + DuckDB, with SLI metrics in VictoriaMetrics and logs in VictoriaLogs.
 
-```
-Dagster ──runs──> ingest assets ──> DuckDB (data/warehouse.duckdb) <── dbt models + tests
-   │
-   ├─ sensors + assets push SLI metrics ──> VictoriaMetrics ──> vmalert (SLO rules)
-   └─ log handler ships run logs ─────────> VictoriaLogs
-                                                 └── both shown in Grafana
-```
+![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read](docs/architecture.svg)
+
+The diagram is drawn with d3 by `docs/diagram/architecture.mjs`. After editing it,
+run `just diagram` (needs Node) and commit the regenerated `docs/architecture.svg`.
 
 ## Quick start
 
@@ -64,6 +61,7 @@ src/data_platform/
 packages/dagster-victoria-sli/  shared package: SliSensorsComponent and VictoriaLogsHandler
 vmalert/rules.yml            SLI recording rules and SLO alerts
 grafana/                     datasources and the SLI dashboard
+docs/diagram/                d3 script that renders docs/architecture.svg (`just diagram`)
 dagster_home/dagster.yaml    Dagster config for `just dev`
 docker/dagster.yaml          Dagster config inside Docker
 ```
