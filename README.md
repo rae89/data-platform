@@ -30,6 +30,20 @@ Jobs → refresh_all → Materialize all.
 For local development with hot reload, run `just dev` (`dg dev`). It runs Dagster
 on your machine against the same Victoria stack and the same DuckDB file.
 
+## Screenshots
+
+A `refresh_all` run in Dagster: every step succeeded and all dbt tests passed as asset checks.
+
+![Dagster run page for refresh_all showing a successful run and passing dbt asset checks](docs/screenshots/dagster-run.png)
+
+The SLI dashboard in Grafana, after the SLI sensors exported that run.
+
+![Grafana Data Platform SLIs dashboard with run success rate, check pass rate, asset age, run duration, row count and logs](docs/screenshots/grafana-sli-dashboard.png)
+
+The same run's logs in VictoriaLogs (`service:dagster job:refresh_all`).
+
+![VictoriaLogs vmui showing log lines for the refresh_all run](docs/screenshots/victorialogs-run-logs.png)
+
 ## Dagster project (dg)
 
 The project was scaffolded with `create-dagster project` and is managed with the
@@ -62,6 +76,7 @@ packages/dagster-victoria-sli/  shared package: SliSensorsComponent and Victoria
 vmalert/rules.yml            SLI recording rules and SLO alerts
 grafana/                     datasources and the SLI dashboard
 docs/diagram/                d3 script that renders docs/architecture.svg (`just diagram`)
+docs/screenshots/            UI screenshots used in this README
 dagster_home/dagster.yaml    Dagster config for `just dev`
 docker/dagster.yaml          Dagster config inside Docker
 ```
