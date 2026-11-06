@@ -212,3 +212,6 @@ dagster_home/*
 dbt_project/.user.yml
 .env
 .local_defs_state/
+
+# d3 diagram build (docs/diagram)
+node_modules/

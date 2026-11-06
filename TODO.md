@@ -1,5 +1,37 @@
 # TODO
 
+## Send alerts somewhere
+
+vmalert evaluates the SLO alerts, but `-notifier.blackhole` discards them, so a
+broken pipeline goes unnoticed until someone opens Grafana.
+
+- [ ] Add an Alertmanager service to `docker-compose.yml` with a config that routes
+      to Slack or email.
+- [ ] Point vmalert at it: replace `-notifier.blackhole` with `-notifier.url`.
+- [ ] Add Alertmanager as a Grafana data source so alerts and silences show there.
+
+## Add a `just ci` recipe and linting
+
+There's no CI config yet. One command should run every check, as the safety net
+before adding a remote.
+
+- [ ] Add `ruff` to the dev dependencies and configure it in `pyproject.toml`.
+- [ ] Add a `ci` recipe that runs `just --fmt --check`, `dg check defs`, `pytest`,
+      a dbt parse, and `ruff`.
+
+## Add project-level tests
+
+The top-level `tests/` folder is empty.
+
+- [ ] Add a smoke test that materializes every asset against a temporary DuckDB
+      file, to catch broken SQL and dbt/Dagster wiring.
+
+## Fix stale comment in `_sources.yml`
+
+- [ ] `dbt_project/models/staging/_sources.yml` says ingest lives in
+      `src/data_platform/assets/ingest.py`. It's actually in
+      `src/data_platform/defs/ingest.py`.
+
 ## Add tracing with VictoriaTraces
 
 One trace per Dagster run, with each asset/step as a span and each dbt model as a
@@ -22,3 +54,12 @@ run page.
 - [ ] Later, once ingestion pulls from real sources: add live OpenTelemetry spans in
       `defs/ingest.py` (auto-instrument `requests` and DB drivers) to see individual
       API calls and retries.
+
+## Rewrite existing docs in the PRs-and-docs style
+
+`AGENTS.md` now asks for outcome-first docs, but `README.md` and the package README
+predate the rule.
+
+- [ ] Rewrite `README.md` so the first lines say what the platform does and how to
+      start it, following "Writing PRs and docs" in `AGENTS.md`.
+- [ ] Do the same for `packages/dagster-victoria-sli/README.md`.
