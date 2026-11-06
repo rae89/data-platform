@@ -23,6 +23,7 @@ just dev             # infra + local Dagster with hot reload (uv run dg dev)
 just check           # validate definitions and component YAML (uv run dg check defs)
 just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
+just cov             # tests with coverage, fails below 99%
 just diagram         # re-render docs diagrams (docs/diagram/*.mjs → docs/*.svg)
 uv run dg list defs  # list assets, checks, jobs, sensors
 ```
@@ -118,5 +119,6 @@ When creating a PR (including with `gh pr create --body`), read
 ## Before finishing a change
 
 - Use `just` recipes and `uv run dg ...` rather than calling `dagster` directly.
-- Run `just check` and `just test`, and report any failures.
+- Run `just check` and `just cov`, and report any failures. Keep coverage at 99% or
+  more: new code comes with tests.
 - Update `README.md`, this file and `TODO.md` if the change affects them.

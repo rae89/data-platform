@@ -28,7 +28,7 @@ class MetricsPusher:
     timeout: float = 5.0
 
     def format(self, samples: list[Sample], timestamp: float | None = None) -> str:
-        ts_ms = int((timestamp or time.time()) * 1000)
+        ts_ms = int((time.time() if timestamp is None else timestamp) * 1000)
         lines = []
         for name, labels, value in samples:
             merged = {**self.labels, **labels}

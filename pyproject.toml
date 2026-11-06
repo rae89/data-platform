@@ -16,6 +16,7 @@ dev = [
     "dagster-dg-cli",
     "dagster-webserver",
     "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [build-system]
@@ -43,3 +44,12 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 dagster-victoria-sli = { workspace = true }
+
+[tool.coverage.run]
+source = ["dagster_victoria_sli", "data_platform"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 99
+skip_covered = true
