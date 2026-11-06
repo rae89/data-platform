@@ -1,0 +1,23 @@
+[project]
+name = "dagster-victoria-sli"
+version = "0.1.0"
+description = "Dagster component that exports pipeline SLIs to VictoriaMetrics, plus a VictoriaLogs log handler"
+readme = "README.md"
+requires-python = ">=3.10,<3.15"
+dependencies = [
+    "dagster>=1.13",
+    "requests>=2.32",
+]
+
+# Lets `dg` discover SliSensorsComponent in any project that installs this package.
+[project.entry-points."dagster_dg_cli.registry_modules"]
+dagster_victoria_sli = "dagster_victoria_sli"
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

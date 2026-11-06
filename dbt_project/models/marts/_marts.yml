@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: customer_orders
+    description: One row per customer with lifetime order stats.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+  - name: daily_revenue
+    description: Revenue per day, excluding returned orders.
+    columns:
+      - name: order_date
+        data_tests: [unique, not_null]

@@ -1,0 +1,116 @@
+{
+  "title": "Dagster assets",
+  "rows": [
+    {
+      "title": "SLO overview",
+      "panels": [
+        {
+          "title": "Run success rate, 7d (SLO 95%)",
+          "description": "Share of finished runs that succeeded over the last 7 days, per job.",
+          "unit": "%",
+          "width": 4,
+          "expr": ["sli:run_success_ratio:7d * 100", "vector(95)"],
+          "alias": ["{{job}}", "SLO"]
+        },
+        {
+          "title": "Oldest asset, minutes (SLO 120)",
+          "description": "Minutes since the least recently refreshed asset was materialized.",
+          "unit": "min",
+          "width": 4,
+          "expr": ["max(dagster_asset_age_seconds) / 60", "vector(120)"],
+          "alias": ["oldest asset", "SLO"]
+        },
+        {
+          "title": "Asset checks passing",
+          "description": "Share of asset checks (dbt tests) passing on their latest run.",
+          "unit": "%",
+          "width": 4,
+          "expr": ["avg(dagster_asset_check_passed) * 100"],
+          "alias": ["checks passing"]
+        }
+      ]
+    },
+    {
+      "title": "Freshness",
+      "panels": [
+        {
+          "title": "Asset age, minutes",
+          "description": "Minutes since each asset was last materialized. Drops to zero on every refresh.",
+          "unit": "min",
+          "width": 8,
+          "expr": ["dagster_asset_age_seconds / 60", "vector(120)"],
+          "alias": ["{{asset}}", "SLO (2h)"]
+        },
+        {
+          "title": "Ever materialized",
+          "description": "1 if the asset has been materialized at least once, else 0.",
+          "width": 4,
+          "expr": ["dagster_asset_materialized"],
+          "alias": ["{{asset}}"]
+        }
+      ]
+    },
+    {
+      "title": "Volume",
+      "panels": [
+        {
+          "title": "Row count",
+          "description": "Rows at each asset's last materialization (only assets that report dagster/row_count).",
+          "unit": "rows",
+          "width": 8,
+          "expr": ["dagster_asset_row_count"],
+          "alias": ["{{asset}}"]
+        },
+        {
+          "title": "Row count change, last 1h",
+          "description": "Difference in row count versus one hour ago. Sudden drops can mean missing data.",
+          "unit": "rows",
+          "width": 4,
+          "expr": ["dagster_asset_row_count - dagster_asset_row_count offset 1h"],
+          "alias": ["{{asset}}"]
+        }
+      ]
+    },
+    {
+      "title": "Data quality",
+      "panels": [
+        {
+          "title": "Failing checks per asset",
+          "description": "Number of asset checks (dbt tests) failing on their latest run, per asset.",
+          "unit": "checks",
+          "width": 6,
+          "expr": ["sum by (asset) (1 - dagster_asset_check_passed)"],
+          "alias": ["{{asset}}"]
+        },
+        {
+          "title": "Check results",
+          "description": "1 = passed, 0 = failed, per check.",
+          "width": 6,
+          "showLegend": false,
+          "expr": ["dagster_asset_check_passed"],
+          "alias": ["{{asset}} / {{check}}"]
+        }
+      ]
+    },
+    {
+      "title": "Runs",
+      "panels": [
+        {
+          "title": "Last run result",
+          "description": "1 if the job's latest finished run succeeded, 0 if it failed.",
+          "width": 6,
+          "expr": ["dagster_run_success"],
+          "alias": ["{{job}}"]
+        },
+        {
+          "title": "Run duration",
+          "description": "Wall-clock time of each finished run.",
+          "unit": "s",
+          "width": 6,
+          "expr": ["dagster_run_duration_seconds"],
+          "alias": ["{{job}} ({{status}})"]
+        }
+      ]
+    }
+  ]
+}

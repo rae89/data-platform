@@ -1,0 +1,28 @@
+# Instance config used inside the Docker container. Keep python_logs in sync with
+# dagster_home/dagster.yaml (used for local `dagster dev`).
+storage:
+  sqlite:
+    base_dir: /opt/dagster/storage
+
+local_artifact_storage:
+  module: dagster._core.storage.root
+  class: LocalArtifactStorage
+  config:
+    base_dir: /opt/dagster/storage
+
+compute_logs:
+  module: dagster._core.storage.local_compute_log_manager
+  class: LocalComputeLogManager
+  config:
+    base_dir: /opt/dagster/storage/compute_logs
+
+python_logs:
+  python_log_level: INFO
+  dagster_handler_config:
+    handlers:
+      victorialogs:
+        class: dagster_victoria_sli.logs.VictoriaLogsHandler
+        level: DEBUG
+
+telemetry:
+  enabled: false

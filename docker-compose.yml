@@ -1,0 +1,76 @@
+name: data-platform
+
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.155.0
+    command:
+      - -storageDataPath=/storage
+      - -retentionPeriod=1y
+      - -httpListenAddr=:8428
+      # Dashboards shown in vmui's Dashboards tab (vmui/dashboards/*.json).
+      - -vmui.customDashboardsPath=/vmui-dashboards
+    ports: ["8428:8428"]
+    volumes:
+      - vm-data:/storage
+      - ./vmui/dashboards:/vmui-dashboards:ro
+    restart: unless-stopped
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.53.0
+    command:
+      - -storageDataPath=/vlogs
+      - -retentionPeriod=30d
+      - -httpListenAddr=:9428
+    ports: ["9428:9428"]
+    volumes: ["vl-data:/vlogs"]
+    restart: unless-stopped
+
+  # Evaluates SLO recording and alerting rules (vmalert/rules.yml).
+  # Alerts show in the vmalert UI and Grafana. Add -notifier.url to send them to Alertmanager.
+  vmalert:
+    image: victoriametrics/vmalert:v1.155.0
+    command:
+      - -rule=/rules/*.yml
+      - -datasource.url=http://victoriametrics:8428
+      - -remoteWrite.url=http://victoriametrics:8428
+      - -remoteRead.url=http://victoriametrics:8428
+      - -notifier.blackhole
+      - -evaluationInterval=1m
+    ports: ["8880:8880"]
+    volumes: ["./vmalert:/rules:ro"]
+    depends_on: [victoriametrics]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.3.0
+    environment:
+      GF_PLUGINS_PREINSTALL_SYNC: victoriametrics-logs-datasource
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/data-platform-slis.json
+    ports: ["3001:3000"]
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on: [victoriametrics, victorialogs]
+    restart: unless-stopped
+
+  dagster:
+    build: .
+    environment:
+      VICTORIA_METRICS_URL: http://victoriametrics:8428
+      VICTORIA_LOGS_URL: http://victorialogs:9428
+      PLATFORM_ENV: local
+    ports: ["3000:3000"]
+    volumes:
+      - ./data:/data                          # DuckDB warehouse, shared with your host
+      - dagster-storage:/opt/dagster/storage  # run history, schedules, compute logs
+    depends_on: [victoriametrics, victorialogs]
+    restart: unless-stopped
+
+volumes:
+  vm-data:
+  vl-data:
+  grafana-data:
+  dagster-storage:

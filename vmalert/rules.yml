@@ -1,0 +1,57 @@
+# SLIs are recorded as sli:* series; alerts fire when an SLO target is missed.
+# Adjust targets to match your own SLOs.
+groups:
+  - name: data-platform-slis
+    interval: 1m
+    rules:
+      # Share of finished runs that succeeded over the last 7 days, per job.
+      - record: sli:run_success_ratio:7d
+        expr: avg by (env, code_location, job) (avg_over_time(dagster_run_success[7d]))
+
+      # Seconds since each asset was last materialized. Uses the last known timestamp,
+      # so the age keeps growing (and AssetStale still fires) if Dagster stops reporting.
+      - record: sli:asset_staleness_seconds
+        expr: time() - max by (env, code_location, asset, group) (last_over_time(dagster_asset_last_materialized_timestamp_seconds[7d]))
+
+      # Share of asset checks (dbt tests) passing on their latest run.
+      - record: sli:asset_check_pass_ratio
+        expr: avg by (env, code_location) (last_over_time(dagster_asset_check_passed[1h]))
+
+  - name: data-platform-slos
+    interval: 1m
+    rules:
+      - alert: PipelineSuccessBelowSLO
+        expr: sli:run_success_ratio:7d < 0.95
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "Job {{ $labels.job }} success rate is {{ $value | humanizePercentage }} (SLO 95%)"
+
+      - alert: AssetStale
+        expr: sli:asset_staleness_seconds > 2 * 3600
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.asset }} not refreshed for {{ $value | humanizeDuration }} (SLO 2h)"
+
+      - alert: AssetCheckFailing
+        expr: last_over_time(dagster_asset_check_passed[1h]) == 0
+        labels: {severity: warning}
+        annotations:
+          summary: "Check {{ $labels.check }} failing on {{ $labels.asset }}"
+
+      - alert: AssetNeverMaterialized
+        expr: max by (env, code_location, asset, group) (dagster_asset_materialized) == 0
+        for: 1h
+        labels: {severity: info}
+        annotations:
+          summary: "{{ $labels.asset }} has never been materialized"
+
+      # The asset_sli sensor reports every minute. Silence means Dagster's daemon is
+      # down or can't reach VictoriaMetrics, and the other SLIs are going stale.
+      - alert: SliMetricsMissing
+        expr: absent_over_time(dagster_asset_materialized[5m])
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "No SLI metrics from Dagster for 5 minutes. Is the Dagster daemon running?"

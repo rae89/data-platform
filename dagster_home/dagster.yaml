@@ -1,0 +1,11 @@
+# Instance config. Set DAGSTER_HOME to this directory (`make dev` does this).
+python_logs:
+  python_log_level: INFO
+  dagster_handler_config:
+    handlers:
+      victorialogs:
+        class: dagster_victoria_sli.logs.VictoriaLogsHandler
+        level: DEBUG
+
+telemetry:
+  enabled: false

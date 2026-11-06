@@ -1,0 +1,11 @@
+type: dagster_dbt.DbtProjectComponent
+
+attributes:
+  project: '{{ context.project_root }}/dbt_project'
+  cli_args:
+    - build
+  # Records row counts on each model (dagster/row_count), picked up by the SLI sensor.
+  include_metadata:
+    - row_count
+  translation:
+    group_name: transform

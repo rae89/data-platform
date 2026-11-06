@@ -1,0 +1,5 @@
+type: dagster_victoria_sli.SliSensorsComponent
+
+attributes:
+  victoria_metrics_url: '{{ env.VICTORIA_METRICS_URL }}'
+  interval_seconds: 60

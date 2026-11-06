@@ -1,0 +1,8 @@
+data_platform:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Dagster always sets DUCKDB_PATH. The default is for running dbt by hand from this folder.
+      path: "{{ env_var('DUCKDB_PATH', '../data/warehouse.duckdb') }}"
+      threads: 4

@@ -1,0 +1,170 @@
+{
+  "uid": "dagster-asset-freshness",
+  "title": "Dagster asset freshness heatmap",
+  "description": "Minutes since each Dagster asset was last materialized, as a heatmap (one row per asset). SLO: 120 minutes.",
+  "tags": ["dagster", "freshness", "slo"],
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "env",
+        "label": "Env",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+        "query": { "query": "label_values(dagster_asset_age_seconds, env)", "refId": "env" },
+        "definition": "label_values(dagster_asset_age_seconds, env)",
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "group",
+        "label": "Group",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+        "query": { "query": "label_values(dagster_asset_age_seconds{env=~\"$env\"}, group)", "refId": "group" },
+        "definition": "label_values(dagster_asset_age_seconds{env=~\"$env\"}, group)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "status-history",
+      "title": "Asset age heatmap, minutes (SLO 120)",
+      "description": "Each row is an asset and each cell a time slot. The cell shows the oldest the asset got in that slot. Green under 1h, yellow 1-1.5h, orange 1.5-2h, red past the 2h SLO. Empty cells mean no data.",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 14 },
+      "interval": "5m",
+      "maxDataPoints": 300,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "max by (asset) (max_over_time(dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"}[$__interval])) / 60",
+          "legendFormat": "{{asset}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "orange", "value": 90 },
+              { "color": "red", "value": 120 }
+            ]
+          },
+          "custom": { "fillOpacity": 85, "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "never",
+        "rowHeight": 0.9,
+        "colWidth": 0.95,
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Current age, minutes",
+      "description": "Minutes since each asset was last materialized, right now.",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "x": 0, "y": 14, "w": 16, "h": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "max by (asset) (dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"}) / 60",
+          "legendFormat": "{{asset}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "orange", "value": 90 },
+              { "color": "red", "value": 120 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Time stale in range",
+      "description": "Share of the selected time range each asset spent past the 2h SLO.",
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "gridPos": { "x": 16, "y": 14, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "expr": "max by (asset) (avg_over_time((dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"} > bool 7200)[$__range:1m]))",
+          "legendFormat": "{{asset}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.001 },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "horizontal",
+        "justifyMode": "auto"
+      }
+    }
+  ]
+}
