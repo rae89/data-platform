@@ -215,3 +215,9 @@ dbt_project/.user.yml
 
 # d3 diagram build (docs/diagram)
 node_modules/
+
+# Default files Homepage writes into its config folder; the portal doesn't use them.
+portal/homepage/docker.yaml
+portal/homepage/kubernetes.yaml
+portal/homepage/proxmox.yaml
+portal/homepage/custom.js

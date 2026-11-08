@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import { JSDOM } from "jsdom";
 
 const W = 900, H = 480, NW = 170, NH = 56;
-const color = { dagster: "#4f46e5", storage: "#b45309", obs: "#0f766e" };
+const color = { dagster: "#4f46e5", storage: "#b45309", obs: "#0f766e", portal: "#475569" };
 
 const nodes = [
   { id: "schedule", x: 40, y: 80, kind: "dagster", title: "refresh_all", sub: "hourly schedule" },
@@ -17,11 +17,15 @@ const nodes = [
   { id: "vl", x: 490, y: 390, kind: "obs", title: "VictoriaLogs", sub: ":9428" },
   { id: "vmalert", x: 710, y: 210, kind: "obs", title: "vmalert", sub: "sli:* rules, SLO alerts" },
   { id: "grafana", x: 710, y: 345, kind: "obs", title: "Grafana", sub: ":3001 dashboards" },
+  { id: "portal", x: 710, y: 80, kind: "portal", title: "Portal (Homepage)", sub: ":3002 links, health checks" },
+  { id: "github", x: 490, y: 30, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
 ];
 const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
 // side: "h" connects right edge → left edge, "v" connects bottom → top.
 const edges = [
+  { from: "vm", to: "portal", label: "live SLIs" },  // first, so other labels draw over its line
+  { from: "github", to: "portal", label: "feeds" },
   { from: "schedule", to: "ingest", label: "runs" },
   { from: "ingest", to: "dbt", side: "v", label: "upstream of" },
   { from: "ingest", to: "duckdb", label: "writes raw.*" },

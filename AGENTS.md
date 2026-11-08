@@ -24,6 +24,7 @@ just check           # validate definitions and component YAML (uv run dg check 
 just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
 just cov             # tests with coverage, fails below 99%
+just portal          # render the portal landing page from portal/catalog.yaml
 just diagram         # re-render docs diagrams (docs/diagram/*.mjs → docs/*.svg)
 uv run dg list defs  # list assets, checks, jobs, sensors
 ```
@@ -47,6 +48,9 @@ After changing dbt models, run `just defs-state` (and `just check`).
   Keep it free of anything specific to this code location.
 - `vmalert/rules.yml`: SLI recording rules (`sli:*`) and SLO alerts.
 - `grafana/`: provisioned data sources and dashboards (JSON).
+- `portal/catalog.yaml`: tool-neutral list of every component for the portal landing
+  page (Homepage, :3002). `just portal` renders `portal/homepage/services.yaml`; don't
+  edit that file by hand.
 - `docs/diagram/`: d3 scripts for docs diagrams. `architecture.mjs` draws the README
   diagram; if you add or remove a component, update it and run `just diagram`.
 - `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`just dev`): instance
@@ -68,10 +72,16 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - Every metric and log line carries `env` (from `PLATFORM_ENV`); metrics also carry
   `code_location`. Keep label and stream-field cardinality low (no run IDs as metric
   labels).
+- **Never commit secrets.** Add a 1Password reference to `.env.op`
+  (`op://<vault>/<item>/<field>`, resolved by `op run` in `just up`), document the
+  variable in `.env.example`, and read it in `docker-compose.yml` as `${NAME:-}`.
 - Configure endpoints with env vars (`VICTORIA_METRICS_URL`, `VICTORIA_LOGS_URL`)
   and default to localhost.
-- If you rename or add a metric, update `vmalert/rules.yml`, the Grafana dashboards
-  and the SLI table in `README.md` together.
+- If you add, remove or move a service, update `portal/catalog.yaml` and run
+  `just portal`, in addition to the architecture diagram.
+- If you rename or add a metric, update `vmalert/rules.yml`, the Grafana dashboards,
+  the portal widgets in `portal/catalog.yaml` and the SLI table in `README.md`
+  together.
 - **Documentation diagrams use d3.** For any diagram or flow chart in the docs
   (README, `docs/`, package READMEs, Notion pages), don't use Mermaid, ASCII art or
   image editors. This doesn't apply to Grafana dashboards or other runtime
