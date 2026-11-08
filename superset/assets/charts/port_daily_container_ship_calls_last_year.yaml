@@ -1,0 +1,38 @@
+slice_name: Daily container ship calls, last year
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 3__table
+  viz_type: echarts_timeseries_line
+  adhoc_filters:
+  - expressionType: SIMPLE
+    subject: activity_date
+    operator: TEMPORAL_RANGE
+    comparator: Last year
+    clause: WHERE
+  time_range: Last year
+  x_axis: activity_date
+  time_grain_sqla: P1D
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: container_calls
+    aggregate: SUM
+    label: Calls
+  - expressionType: SIMPLE
+    column:
+      column_name: container_calls_7d_avg
+    aggregate: MAX
+    label: 7-day avg
+  groupby: []
+  row_limit: 10000
+  show_legend: true
+  rich_tooltip: true
+  y_axis_format: ',.0f'
+query_context: null
+cache_timeout: null
+uuid: 57b168a2-65fd-401f-a18d-64711f9301b6
+version: 1.0.0
+dataset_uuid: e1caa8ea-4240-4dc6-8023-4b961b7c8e4b

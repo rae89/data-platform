@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  # Loaded by dlt: src/data_platform/defs/sources/portwatch/ (IMF PortWatch, daily).
+  - name: portwatch
+    schema: portwatch
+    tables:
+      - name: daily_ports
+        description: Estimated daily port calls and trade volumes per port, from AIS data.

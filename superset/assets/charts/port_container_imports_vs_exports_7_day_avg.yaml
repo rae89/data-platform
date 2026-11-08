@@ -1,0 +1,38 @@
+slice_name: Container imports vs. exports (7-day avg)
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 3__table
+  viz_type: echarts_timeseries_line
+  adhoc_filters:
+  - expressionType: SIMPLE
+    subject: activity_date
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    clause: WHERE
+  time_range: No filter
+  x_axis: activity_date
+  time_grain_sqla: P1W
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: container_import_volume_7d_avg
+    aggregate: AVG
+    label: Imports
+  - expressionType: SIMPLE
+    column:
+      column_name: container_export_volume_7d_avg
+    aggregate: AVG
+    label: Exports
+  groupby: []
+  row_limit: 10000
+  show_legend: true
+  rich_tooltip: true
+  y_axis_format: .3s
+query_context: null
+cache_timeout: null
+uuid: c0b09a67-6d27-4b1e-96bb-0ab67b55dd03
+version: 1.0.0
+dataset_uuid: e1caa8ea-4240-4dc6-8023-4b961b7c8e4b

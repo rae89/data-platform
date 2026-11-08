@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: stg_portwatch__daily_ports
+    columns:
+      - name: port_id
+        data_tests: [not_null]
+      - name: activity_date
+        data_tests: [not_null]

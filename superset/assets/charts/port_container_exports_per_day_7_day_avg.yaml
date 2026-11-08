@@ -1,0 +1,33 @@
+slice_name: Container exports per day (7-day avg)
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number
+params:
+  datasource: 3__table
+  viz_type: big_number
+  adhoc_filters:
+  - expressionType: SIMPLE
+    subject: activity_date
+    operator: TEMPORAL_RANGE
+    comparator: Last quarter
+    clause: WHERE
+  time_range: Last quarter
+  x_axis: activity_date
+  time_grain_sqla: P1D
+  metric:
+    expressionType: SIMPLE
+    column:
+      column_name: container_export_volume_7d_avg
+    aggregate: MAX
+    label: Exports
+  show_trend_line: true
+  start_y_axis_at_zero: true
+  y_axis_format: .3s
+  compare_lag: 7
+  compare_suffix: vs. a week earlier
+query_context: null
+cache_timeout: null
+uuid: 150214a4-ea79-4bd6-91b8-356e5478c764
+version: 1.0.0
+dataset_uuid: e1caa8ea-4240-4dc6-8023-4b961b7c8e4b

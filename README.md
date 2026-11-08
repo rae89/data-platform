@@ -117,12 +117,57 @@ orders, average order value, customers, daily revenue and the top 10 customers.
 
 ![Superset "Sales overview" dashboard with revenue, orders, average order value, customers, a daily revenue line chart and a top customers table](docs/screenshots/superset-dashboard.png)
 
+**Port activity (LA-Long Beach)**
+(http://localhost:8088/superset/dashboard/port-activity/): IMF PortWatch data from
+`marts.port_daily_activity`. Container ship calls and container import/export volumes
+(7-day averages with a week-over-week change and a 90-day sparkline), daily calls over
+the last year, imports vs. exports since 2019, and average calls per day by year.
+Volumes are PortWatch estimates from ship tracking data.
+
+![Superset "Port activity" dashboard with container calls, imports and exports, daily calls, imports vs. exports since 2019 and calls per day by year](docs/screenshots/superset-port-dashboard.png)
+
 Dashboards are config-as-code: `superset/assets/` holds the connection, datasets,
 charts and dashboard, and every start imports them with `--overwrite`. To change
 one, edit it in Superset, export it (Dashboards → ⋯ → Export), and replace the files
 in `superset/assets/`, keeping the existing file names. Edits made only in the UI are
 overwritten on the next start. New dashboards you don't export stay in Superset's
 own database (the `superset-home` volume).
+
+## Ingesting data with dlt
+
+External data sources are loaded with [dlt](https://dlthub.com) into the warehouse,
+one schema per source, and dbt builds on top of them. Current sources:
+
+| Source | Data | Updates | Mart |
+|--------|------|---------|------|
+| `portwatch` | [IMF PortWatch](https://portwatch.imf.org): daily port calls and trade volumes for Los Angeles-Long Beach, estimated from ship tracking (AIS) data | Daily, about 9 days behind | `marts.port_daily_activity` |
+
+Sources run in their own job, `ingest_sources`, daily at 06:30 UTC, together with the
+dbt models built on them (all in the `sources` group). `refresh_all` stays hourly and
+excludes them, so an outage at an external API never fails the internal pipeline.
+Sources load incrementally.
+
+Each source is one folder under `src/data_platform/defs/sources/`, using the
+`DltWarehouseLoads` component (`src/data_platform/components/dlt_warehouse.py`). Every
+dlt resource becomes the asset `<source>/<table>`, which is also the key dagster-dbt
+gives the dbt source table, so the lineage connects with no extra code. Row counts are
+recorded, so new sources show up in the SLIs automatically.
+
+To add a source:
+
+1. Scaffold it: `uv run dg scaffold defs data_platform.components.DltWarehouseLoads sources/<name>`.
+   This writes `defs.yaml` and a `loads.py` template.
+2. In `loads.py`, define the dlt source (`rest_api_source` config, or any dlt source)
+   named `<name>`. Keep `source.max_table_nesting = 0`, so each resource is one table.
+   For APIs `rest_api_source` can't express (like PortWatch's ArcGIS query), write a
+   small `@dlt.resource` instead; see `sources/portwatch/loads.py`.
+3. Add dbt models in `dbt_project/models/staging/<name>/`: a `_<name>__sources.yml`
+   with `schema: <name>`, then staging models. Put the folder in the `sources` group
+   in `dbt_project.yml` (`+meta: {dagster: {group: sources}}`), and any mart built only
+   on daily sources too. Run `just defs-state` and `just check`.
+
+Secrets for a source go in `.env.op` (1Password) and are read by dlt from the
+environment, e.g. `SOURCES__<NAME>__ACCESS_TOKEN`.
 
 ## Dagster project (dg)
 
@@ -145,10 +190,12 @@ dbt assets come from the `dagster_dbt.DbtProjectComponent` configured in
 ```
 dbt_project/                 dbt models (staging → marts) and tests
 src/data_platform/
+  components/                DltWarehouseLoads: reusable dlt -> DuckDB component (dg scaffold)
   definitions.py             entry point: loads everything in defs/ (scaffolded by dg)
   defs/
     dbt/defs.yaml            DbtProjectComponent: dbt models → assets, tests → checks
-    ingest.py                raw.customers, raw.orders (synthetic data, replace with real sources)
+    ingest.py                raw.customers, raw.orders (synthetic data)
+    sources/<name>/          one dlt source each (defs.yaml + loads.py), e.g. portwatch
     bi.py                    bi/marts_snapshot: read-only copy of the marts for Superset
     resources.py             DuckDB resource and in-process executor
     schedules.py             refresh_all job, hourly
@@ -170,7 +217,7 @@ docker/dagster.yaml          Dagster config inside Docker
 | SLI | Metric | SLO (in vmalert/rules.yml) |
 |-----|--------|-----|
 | Pipeline success rate | `dagster_run_success{job}` (1/0 per run) | ≥ 95% over 7 days |
-| Freshness | `dagster_asset_age_seconds{asset,group}` (also `..._last_materialized_timestamp_seconds`) | refreshed within 2h |
+| Freshness | `dagster_asset_age_seconds{asset,group}` (also `..._last_materialized_timestamp_seconds`) | refreshed within 2h; 26h for the daily `sources` group |
 | Coverage | `dagster_asset_materialized{asset,group}` (1/0, every asset) | every asset has run |
 | Data quality | `dagster_asset_check_passed{asset,check}` (dbt tests and any other checks) | all checks passing |
 | Run duration | `dagster_run_duration_seconds{job,status}` | dashboard only |

@@ -65,11 +65,19 @@
           format:
             type: percent
         - label: Oldest asset
-          query: max(sli:asset_staleness_seconds{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
-            / 60
+          query: max(sli:asset_staleness_seconds{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}",
+            group!="sources"}) / 60
           format:
             type: number
             suffix: ' min'
+            options:
+              maximumFractionDigits: 0
+        - label: Oldest daily source
+          query: max(sli:asset_staleness_seconds{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}",
+            group="sources"}) / 3600
+          format:
+            type: number
+            suffix: ' h'
             options:
               maximumFractionDigits: 0
   - VictoriaLogs:

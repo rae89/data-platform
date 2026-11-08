@@ -5,9 +5,11 @@ version = "0.1.0"
 dependencies = [
     "dagster==1.13.29",
     "dagster-dbt>=0.29.29",
+    "dagster-dlt==0.29.29",
     "dagster-duckdb>=0.29.29",
     "dagster-victoria-sli>=0.1.0",
     "dbt-duckdb>=1.11.1",
+    "dlt==1.32.0",
     "requests>=2.34.2",
 ]
 
