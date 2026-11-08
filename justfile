@@ -27,7 +27,11 @@ check:
 
 # Run tests (extra args go to pytest)
 test *args:
-    uv run pytest packages/dagster-victoria-sli/tests {{ args }}
+    uv run pytest packages/dagster-victoria-sli/tests tests {{ args }}
+
+# Run tests with coverage; fails below 99%
+cov *args:
+    uv run pytest packages/dagster-victoria-sli/tests tests --cov {{ args }}
 
 # Rebuild the dbt component state (manifest) after changing dbt models
 defs-state:

@@ -59,16 +59,21 @@ def build_sli_sensors(pusher: MetricsPusher, interval_seconds: int = 60) -> list
         samples = []
 
         for key in keys:
-            labels = {"asset": key.to_user_string(), "group": graph.get(key).group_name}
+            node = graph.get(key)
+            labels = {"asset": key.to_user_string(), "group": node.group_name}
             entry = entries.get(key)
-            # External assets are observed rather than materialized.
-            event = entry and (entry.last_materialization or entry.last_observation)
+            materialization = entry and entry.last_materialization
+            event = materialization
+            if event is None and not node.is_materializable:
+                # External assets are observed instead. Asset records don't carry the
+                # last observation on every storage, so read it from the event log.
+                observations = context.instance.fetch_observations(key, limit=1).records
+                event = observations[0].event_log_entry if observations else None
             samples.append(("dagster_asset_materialized", labels, int(event is not None)))
             if event is None:
                 continue
             samples.append(("dagster_asset_age_seconds", labels, round(now - event.timestamp, 3)))
             samples.append(("dagster_asset_last_materialized_timestamp_seconds", labels, event.timestamp))
-            materialization = entry.last_materialization
             row_count = materialization and materialization.asset_materialization.metadata.get(
                 "dagster/row_count"
             )
