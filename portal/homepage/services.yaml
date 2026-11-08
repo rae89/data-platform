@@ -1,0 +1,143 @@
+# Generated from portal/catalog.yaml by `just portal`. Don't edit by hand.
+- Orchestration:
+  - Dagster:
+      href: http://localhost:3000
+      description: Assets, runs, schedules and sensors
+      icon: dagster.png
+      siteMonitor: http://host.docker.internal:3000/server_info
+      widgets:
+      - type: customapi
+        url: http://host.docker.internal:3000/graphql
+        method: POST
+        headers:
+          Content-Type: application/json
+        requestBody:
+          query: '{ runsOrError(filter: {pipelineName: "refresh_all"}, limit: 1) {
+            ... on Runs { results { status } } } }'
+        mappings:
+        - field:
+            data:
+              runsOrError:
+                results:
+                  0: status
+          label: Last refresh_all run
+      - type: prometheusmetric
+        url: http://victoriametrics:8428
+        metrics:
+        - label: Assets
+          query: count(max by (asset) (dagster_asset_materialized{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
+        - label: Never materialized
+          query: count(max by (asset) (dagster_asset_materialized{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
+            == 0) or vector(0)
+        - label: Rows (all assets)
+          query: sum(max by (asset) (dagster_asset_row_count{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
+          format:
+            type: number
+- Observability:
+  - Grafana:
+      href: http://localhost:3001
+      description: SLI dashboards and run logs
+      icon: grafana.png
+      siteMonitor: http://grafana:3000/api/health
+  - VictoriaMetrics:
+      href: http://localhost:8428/vmui
+      description: SLI metrics (PromQL / MetricsQL)
+      icon: victoriametrics-light.png
+      siteMonitor: http://victoriametrics:8428/health
+      widget:
+        type: prometheusmetric
+        url: http://victoriametrics:8428
+        metrics:
+        - label: Run success 7d
+          query: min(sli:run_success_ratio:7d{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
+            * 100
+          format:
+            type: percent
+        - label: Checks passing
+          query: min(sli:asset_check_pass_ratio{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
+            * 100
+          format:
+            type: percent
+        - label: Oldest asset
+          query: max(sli:asset_staleness_seconds{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
+            / 60
+          format:
+            type: number
+            suffix: ' min'
+            options:
+              maximumFractionDigits: 0
+  - VictoriaLogs:
+      href: http://localhost:9428/select/vmui
+      description: Dagster run logs (LogsQL)
+      icon: victorialogs.png
+      siteMonitor: http://victorialogs:9428/health
+  - vmalert:
+      href: http://localhost:8880
+      description: SLO rules and firing alerts
+      icon: victoriametrics-light.png
+      siteMonitor: http://vmalert:8880/health
+      widget:
+        type: prometheusmetric
+        url: http://victoriametrics:8428
+        metrics:
+        - label: Firing alerts
+          query: count(ALERTS{alertstate="firing", env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
+            or vector(0)
+- Updates:
+  - Platform changes:
+      href: https://github.com/rae89/data-platform/pulls?q=is%3Apr+is%3Amerged
+      description: Merged pull requests, newest first
+      icon: github-light.png
+      widget:
+        type: customapi
+        url: https://api.github.com/search/issues?q=repo:rae89/data-platform+is:pr+is:merged&sort=created&order=desc&per_page=5
+        headers:
+          Authorization: Bearer {{HOMEPAGE_VAR_GITHUB_TOKEN}}
+          Accept: application/vnd.github+json
+          User-Agent: data-platform-portal
+        refreshInterval: 300000
+        display: dynamic-list
+        mappings:
+          items: items
+          name: title
+          label: closed_at
+          format: relativeDate
+          limit: 5
+          target: '{html_url}'
+- Upstream releases:
+  - Dagster:
+      href: https://github.com/dagster-io/dagster/releases
+      description: Dagster and dagster-dbt
+      icon: dagster.png
+      widget:
+        type: feed
+        url: https://github.com/dagster-io/dagster/releases.atom
+        maxItems: 5
+        images: false
+  - Grafana:
+      href: https://github.com/grafana/grafana/releases
+      description: Grafana
+      icon: grafana.png
+      widget:
+        type: feed
+        url: https://github.com/grafana/grafana/releases.atom
+        maxItems: 5
+        images: false
+  - VictoriaMetrics:
+      href: https://github.com/VictoriaMetrics/VictoriaMetrics/releases
+      description: VictoriaMetrics, VictoriaLogs and vmalert
+      icon: victoriametrics-light.png
+      widget:
+        type: feed
+        url: https://github.com/VictoriaMetrics/VictoriaMetrics/releases.atom
+        maxItems: 5
+        images: false
+  - Homepage:
+      href: https://github.com/gethomepage/homepage/releases
+      description: The portal itself
+      icon: homepage.png
+      widget:
+        type: feed
+        url: https://github.com/gethomepage/homepage/releases.atom
+        maxItems: 5
+        images: false

@@ -6,7 +6,15 @@ default:
 
 # Start everything (Dagster, Victoria stack, Grafana) in Docker
 up:
-    docker compose up -d --build
+    #!/usr/bin/env sh
+    # Secrets come from 1Password (.env.op) when op can resolve them, else from .env.
+    # Secrets only feed optional extras, so never let a 1Password problem block startup.
+    if command -v op >/dev/null 2>&1 && op run --env-file .env.op -- true >/dev/null; then
+        op run --env-file .env.op -- docker compose up -d --build
+    else
+        echo "1Password secrets unavailable (see op error above); using .env if present"
+        docker compose up -d --build
+    fi
 
 # Stop all containers (data is kept in volumes and ./data)
 down:
@@ -36,6 +44,11 @@ cov *args:
 # Rebuild the dbt component state (manifest) after changing dbt models
 defs-state:
     uv run dg utils refresh-defs-state
+
+# Render the portal from portal/catalog.yaml and restart it (settings and CSS need a restart)
+portal:
+    uv run python portal/render_homepage.py
+    docker compose restart portal
 
 # Follow Dagster container logs
 logs:

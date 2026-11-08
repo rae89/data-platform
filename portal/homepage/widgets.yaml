@@ -1,0 +1,9 @@
+# Header widgets: https://gethomepage.dev/configs/info-widgets/
+- greeting:
+    text_size: 4xl
+    text: Data Platform
+- datetime:
+    text_size: md
+    format:
+      dateStyle: medium
+      timeStyle: short

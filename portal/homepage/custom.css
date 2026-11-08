@@ -1,0 +1,67 @@
+/* iOS-style look: colorful wallpaper, frosted-glass cards, system font, large title.
+   Targets Homepage's own class names (service-card, bookmark-*, ...) and #__next, not
+   Tailwind classes, which change between releases. !important beats Tailwind utilities. */
+
+#__next {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(10, 132, 255, 0.55), transparent 42%),
+    radial-gradient(circle at 88% 12%, rgba(191, 90, 242, 0.45), transparent 42%),
+    radial-gradient(circle at 75% 88%, rgba(255, 55, 95, 0.35), transparent 48%),
+    radial-gradient(circle at 18% 92%, rgba(48, 209, 88, 0.22), transparent 42%),
+    #000;
+  background-attachment: fixed;
+}
+
+/* Large title, like an iOS navigation bar. */
+.information-widget-greeting span {
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+}
+
+.service-group-name,
+.bookmark-group-name {
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+
+/* Frosted glass cards. */
+.service-card {
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none !important; /* a parent clips overflow, so shadows show a square edge */
+}
+.service-name {
+  font-weight: 600 !important;
+}
+
+/* Widget values: big number on top, small sentence-case label below. */
+.service-block {
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+.service-block-value {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+}
+.service-block-label {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  opacity: 0.65;
+}
+
+/* Bookmarks as rounded glass pills, like iOS buttons. */
+a:has(.bookmark-icon) {
+  border-radius: 14px !important;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none !important;
+}
+.bookmark-icon {
+  background: transparent !important;
+}
+.bookmark-description {
+  display: none; /* the domain; names are enough */
+}

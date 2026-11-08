@@ -1,0 +1,34 @@
+# Homepage settings: https://gethomepage.dev/configs/settings/
+# The services list is generated: edit portal/catalog.yaml, then run `just portal`.
+title: Data Platform
+description: Landing page for every data platform component
+favicon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/dagster.png
+theme: dark
+color: neutral
+headerStyle: clean
+hideVersion: true
+statusStyle: dot
+useEqualHeights: true
+cardBlur: xl
+bookmarksStyle: icons
+layout:
+  Orchestration:
+    icon: mdi-pipe
+    style: row
+    columns: 2
+  Observability:
+    icon: mdi-chart-box-outline
+    style: row
+    columns: 4
+  Updates:
+    icon: mdi-source-pull
+    style: row
+    columns: 2
+  Upstream releases:
+    icon: mdi-tag-outline
+    style: row
+    columns: 4
+  Links:
+    icon: mdi-bookmark-outline
+    style: row
+    columns: 4

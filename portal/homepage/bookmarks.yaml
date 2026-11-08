@@ -1,0 +1,14 @@
+# Links shown under the services: https://gethomepage.dev/configs/bookmarks
+- Links:
+    - Repository:
+        - icon: github-light.png
+          href: https://github.com/rae89/data-platform
+    - Dagster docs:
+        - icon: dagster.png
+          href: https://docs.dagster.io
+    - dbt docs:
+        - icon: si-dbt-#FF694B
+          href: https://docs.getdbt.com
+    - VictoriaMetrics docs:
+        - icon: victoriametrics-light.png
+          href: https://docs.victoriametrics.com

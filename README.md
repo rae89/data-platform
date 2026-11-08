@@ -2,7 +2,7 @@
 
 dbt + Dagster + DuckDB, with SLI metrics in VictoriaMetrics and logs in VictoriaLogs.
 
-![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read](docs/architecture.svg)
+![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read; the Homepage portal links and health-checks every service, shows live SLIs from VictoriaMetrics and pulls update feeds from GitHub](docs/architecture.svg)
 
 The diagram is drawn with d3 by `docs/diagram/architecture.mjs`. After editing it,
 run `just diagram` (needs Node) and commit the regenerated `docs/architecture.svg`.
@@ -16,8 +16,11 @@ or `uv tool install rust-just`). Run `just` to list them.
 just up
 ```
 
+Start at the portal: one landing page linking every component, with status and live SLIs.
+
 | Service          | URL                    |
 |------------------|------------------------|
+| **Portal**       | http://localhost:3002  (landing page) |
 | Dagster          | http://localhost:3000  |
 | Grafana          | http://localhost:3001  (opens the "Data Platform SLIs" dashboard) |
 | VictoriaMetrics  | http://localhost:8428/vmui |
@@ -32,6 +35,10 @@ on your machine against the same Victoria stack and the same DuckDB file.
 
 ## Screenshots
 
+The portal landing page: every component with its status, live SLIs, the last Dagster run, recent platform changes and upstream releases.
+
+![Portal landing page with tiles for Dagster, Grafana, VictoriaMetrics, VictoriaLogs and vmalert, status dots and live SLI values](docs/screenshots/portal.png)
+
 A `refresh_all` run in Dagster: every step succeeded and all dbt tests passed as asset checks.
 
 ![Dagster run page for refresh_all showing a successful run and passing dbt asset checks](docs/screenshots/dagster-run.png)
@@ -43,6 +50,43 @@ The SLI dashboard in Grafana, after the SLI sensors exported that run.
 The same run's logs in VictoriaLogs (`service:dagster job:refresh_all`).
 
 ![VictoriaLogs vmui showing log lines for the refresh_all run](docs/screenshots/victorialogs-run-logs.png)
+
+## Portal
+
+The portal (http://localhost:3002) runs [Homepage](https://gethomepage.dev). It's
+built to be replaceable:
+
+1. `portal/catalog.yaml` lists every component in a tool-neutral format: name, group,
+   description, URL and health check URL. Homepage-only extras (live widgets) sit
+   under a `homepage:` key.
+2. `just portal` renders the catalog into `portal/homepage/services.yaml` and restarts
+   the portal. Look and layout live in `portal/homepage/settings.yaml`, `bookmarks.yaml`,
+   `widgets.yaml` (header) and `custom.css` (iOS-style glass cards; it targets
+   Homepage's own class names, not Tailwind classes).
+3. The Docker service is called `portal`, not `homepage`, so nothing else refers to
+   the tool.
+
+To add a component, add it to the catalog and run `just portal`. To replace Homepage,
+write a renderer for the new tool that reads the same catalog, and swap the image in
+`docker-compose.yml`.
+
+The portal also shows update feeds, defined under `feeds:` in the catalog:
+
+- **Platform changes:** the last 5 merged PRs in this repo. The repo is private, so
+  this needs a fine-grained token with "Pull requests: Read-only" for this repo.
+  Without it the tile shows an API error.
+  - **With 1Password** (recommended): save the token in the Personal vault as an
+    item named `data-platform-github-token` with the token in its `credential` field,
+    then run `just up`. `.env.op` holds the reference and `op run` injects it, so the
+    token is never written to disk.
+  - **Without 1Password:** copy `.env.example` to `.env`, paste the token, run `just up`.
+- **Upstream releases:** the latest Dagster, Grafana, VictoriaMetrics and Homepage
+  releases, from their public GitHub release feeds. Compare them with the pinned
+  versions in `docker-compose.yml` and `pyproject.toml` to see when to upgrade.
+
+Homepage has one page, not a page per service. For more views, put groups on tabs
+(`layout.<group>.tab` in `portal/homepage/settings.yaml`) or embed a page with
+Homepage's `iframe` widget.
 
 ## Dagster project (dg)
 
@@ -75,6 +119,8 @@ src/data_platform/
 packages/dagster-victoria-sli/  shared package: SliSensorsComponent and VictoriaLogsHandler
 vmalert/rules.yml            SLI recording rules and SLO alerts
 grafana/                     datasources and the SLI dashboard
+portal/catalog.yaml          every component, for the portal landing page (`just portal`)
+portal/homepage/             Homepage config; services.yaml is generated from the catalog
 docs/diagram/                d3 script that renders docs/architecture.svg (`just diagram`)
 docs/screenshots/            UI screenshots used in this README
 dagster_home/dagster.yaml    Dagster config for `just dev`

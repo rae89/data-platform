@@ -1,0 +1,135 @@
+# Every data platform component, for the portal landing page (http://localhost:3002).
+#
+# This file is the source of truth and is tool-neutral on purpose. `just portal`
+# renders it into the current portal's config (Homepage: portal/homepage/services.yaml).
+# To replace Homepage, write a renderer for the new tool and keep this file.
+#
+# Fields: name, group, description, url (opened in the browser), health (URL the
+# portal checks from inside Docker; optional), icon (optional). `homepage:` holds
+# Homepage-only extras such as live widgets; other portals ignore it. Widget queries
+# filter on {{HOMEPAGE_VAR_PLATFORM_ENV}}, which Homepage fills from PLATFORM_ENV.
+
+components:
+  - name: Dagster
+    group: Orchestration
+    description: Assets, runs, schedules and sensors
+    url: http://localhost:3000
+    # host.docker.internal reaches Dagster both in Docker (just up) and on the host (just dev).
+    health: http://host.docker.internal:3000/server_info
+    icon: dagster.png
+    homepage:
+      widgets:
+        - type: customapi
+          url: http://host.docker.internal:3000/graphql
+          method: POST
+          headers:
+            Content-Type: application/json
+          requestBody:
+            query: '{ runsOrError(filter: {pipelineName: "refresh_all"}, limit: 1) { ... on Runs { results { status } } } }'
+          mappings:
+            - field:
+                data:
+                  runsOrError:
+                    results:
+                      0: status
+              label: Last refresh_all run
+        - type: prometheusmetric
+          url: http://victoriametrics:8428
+          metrics:
+            - label: Assets
+              query: count(max by (asset) (dagster_asset_materialized{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
+            - label: Never materialized
+              query: count(max by (asset) (dagster_asset_materialized{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}) == 0) or vector(0)
+            - label: Rows (all assets)
+              query: sum(max by (asset) (dagster_asset_row_count{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
+              format: {type: number}
+
+  - name: Grafana
+    group: Observability
+    description: SLI dashboards and run logs
+    url: http://localhost:3001
+    health: http://grafana:3000/api/health
+    icon: grafana.png
+
+  - name: VictoriaMetrics
+    group: Observability
+    description: SLI metrics (PromQL / MetricsQL)
+    url: http://localhost:8428/vmui
+    health: http://victoriametrics:8428/health
+    icon: victoriametrics-light.png
+    homepage:
+      widget:
+        type: prometheusmetric
+        url: http://victoriametrics:8428
+        metrics:
+          - label: Run success 7d
+            query: min(sli:run_success_ratio:7d{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}) * 100
+            format: {type: percent}
+          - label: Checks passing
+            query: min(sli:asset_check_pass_ratio{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}) * 100
+            format: {type: percent}
+          - label: Oldest asset
+            query: max(sli:asset_staleness_seconds{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}) / 60
+            format: {type: number, suffix: " min", options: {maximumFractionDigits: 0}}
+
+  - name: VictoriaLogs
+    group: Observability
+    description: Dagster run logs (LogsQL)
+    url: http://localhost:9428/select/vmui
+    health: http://victorialogs:9428/health
+    icon: victorialogs.png
+
+  - name: vmalert
+    group: Observability
+    description: SLO rules and firing alerts
+    url: http://localhost:8880
+    health: http://vmalert:8880/health
+    icon: victoriametrics-light.png
+    homepage:
+      widget:
+        type: prometheusmetric
+        url: http://victoriametrics:8428
+        metrics:
+          - label: Firing alerts
+            query: count(ALERTS{alertstate="firing", env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}) or vector(0)
+
+# Update feeds shown on the portal. Fields: name, group, description, url (opened on
+# click), icon (optional), source. Source types:
+#   github-merged-prs: latest merged PRs of `repo`. Needs a read-only token in
+#                      GITHUB_TOKEN (see .env.example) because the repo is private.
+#   atom:              any RSS or Atom feed at `url` (e.g. GitHub releases.atom).
+feeds:
+  - name: Platform changes
+    group: Updates
+    description: Merged pull requests, newest first
+    url: https://github.com/rae89/data-platform/pulls?q=is%3Apr+is%3Amerged
+    icon: github-light.png
+    source: {type: github-merged-prs, repo: rae89/data-platform}
+
+  - name: Dagster
+    group: Upstream releases
+    description: Dagster and dagster-dbt
+    url: https://github.com/dagster-io/dagster/releases
+    icon: dagster.png
+    source: {type: atom, url: https://github.com/dagster-io/dagster/releases.atom}
+
+  - name: Grafana
+    group: Upstream releases
+    description: Grafana
+    url: https://github.com/grafana/grafana/releases
+    icon: grafana.png
+    source: {type: atom, url: https://github.com/grafana/grafana/releases.atom}
+
+  - name: VictoriaMetrics
+    group: Upstream releases
+    description: VictoriaMetrics, VictoriaLogs and vmalert
+    url: https://github.com/VictoriaMetrics/VictoriaMetrics/releases
+    icon: victoriametrics-light.png
+    source: {type: atom, url: https://github.com/VictoriaMetrics/VictoriaMetrics/releases.atom}
+
+  - name: Homepage
+    group: Upstream releases
+    description: The portal itself
+    url: https://github.com/gethomepage/homepage/releases
+    icon: homepage.png
+    source: {type: atom, url: https://github.com/gethomepage/homepage/releases.atom}
