@@ -42,12 +42,16 @@ After changing dbt models, run `just defs-state` (and `just check`).
     an asset check.
   - `sli/defs.yaml`: `SliSensorsComponent` config.
   - `resources.py`, `schedules.py`: DuckDB resource, executor, hourly `refresh_all`.
+  - `bi.py`: `bi/marts_snapshot`, a read-only copy of the marts (`data/bi.duckdb`)
+    for Superset. Runs as its own run via the `serve_automation` sensor.
 - `dbt_project/`: dbt models (`staging` → `marts`) and tests.
 - `packages/dagster-victoria-sli/`: shared, separately installable package
   (uv workspace member) with the SLI sensors component and the VictoriaLogs handler.
   Keep it free of anything specific to this code location.
 - `vmalert/rules.yml`: SLI recording rules (`sli:*`) and SLO alerts.
 - `grafana/`: provisioned data sources and dashboards (JSON).
+- `superset/`: Superset image (DuckDB driver pinned to the uv.lock version), config,
+  and `assets/` imported on start (the warehouse connection).
 - `portal/catalog.yaml`: tool-neutral list of every component for the portal landing
   page (Homepage, :3002). `just portal` renders `portal/homepage/services.yaml`; don't
   edit that file by hand.
@@ -64,6 +68,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - **DuckDB allows one writer process.** Keep the in-process executor. Don't add
   multiprocess executors or open the warehouse for writing from other processes.
   Open it read-only for inspection: `duckdb -readonly data/warehouse.duckdb`.
+  BI tools (Superset) read `data/bi.duckdb`, never the warehouse: even a read-only
+  query holds a lock that makes the next run fail.
 - **Assets don't push metrics.** They record `dagster/row_count` metadata and check
   results. The SLI sensors export that state to VictoriaMetrics. Follow this pattern
   for new assets.

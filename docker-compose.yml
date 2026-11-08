@@ -69,6 +69,21 @@ services:
     depends_on: [victoriametrics, victorialogs]
     restart: unless-stopped
 
+  # BI dashboards on the dbt marts (superset/). Reads data/bi.duckdb, a snapshot the
+  # bi/marts_snapshot asset writes after each run, never the warehouse itself.
+  superset:
+    build: ./superset
+    environment:
+      # Secrets: 1Password via `just up` (.env.op), or .env. Superset exits without them.
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-}
+    ports: ["8088:8088"]
+    volumes:
+      - ./data:/data:ro
+      - superset-home:/app/superset_home  # metadata: users, charts, dashboards
+    # Don't restart forever when secrets are missing; other services are unaffected.
+    restart: on-failure:3
+
   # Landing page linking every component. Generic name so the tool behind it can be
   # swapped: services come from portal/catalog.yaml (`just portal` renders them).
   portal:
@@ -91,3 +106,4 @@ volumes:
   vl-data:
   grafana-data:
   dagster-storage:
+  superset-home:

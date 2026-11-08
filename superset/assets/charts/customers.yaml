@@ -1,0 +1,22 @@
+slice_name: Customers
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 2__table
+  viz_type: big_number_total
+  adhoc_filters: []
+  metric:
+    expressionType: SIMPLE
+    column:
+      column_name: customer_id
+    aggregate: COUNT_DISTINCT
+    label: Customers
+  y_axis_format: ',d'
+  header_font_size: 0.4
+query_context: null
+cache_timeout: null
+uuid: 76c76304-fade-4a1e-9639-2a422aace424
+version: 1.0.0
+dataset_uuid: 370141c3-eaec-44aa-9bcc-0a8e5e7cf35f

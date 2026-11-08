@@ -1,0 +1,26 @@
+slice_name: Top customers by lifetime value (incl. returns)
+description: null
+certified_by: null
+certification_details: null
+viz_type: table
+params:
+  datasource: 2__table
+  viz_type: table
+  adhoc_filters: []
+  query_mode: raw
+  all_columns:
+  - customer_name
+  - order_count
+  - lifetime_value
+  - last_order_at
+  order_by_cols:
+  - '["lifetime_value", false]'
+  row_limit: 10
+  column_config:
+    lifetime_value:
+      d3NumberFormat: $,.2f
+query_context: null
+cache_timeout: null
+uuid: bef8779c-61c0-4870-ac66-1c6e7e6297a7
+version: 1.0.0
+dataset_uuid: 370141c3-eaec-44aa-9bcc-0a8e5e7cf35f

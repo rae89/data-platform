@@ -1,0 +1,29 @@
+slice_name: Daily revenue
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 1__table
+  viz_type: echarts_timeseries_line
+  adhoc_filters: []
+  x_axis: order_date
+  time_grain_sqla: P1D
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: revenue
+    aggregate: SUM
+    label: Revenue
+  groupby: []
+  row_limit: 10000
+  y_axis_format: $,.0f
+  show_legend: false
+  rich_tooltip: true
+  markerEnabled: false
+  time_range: No filter
+query_context: null
+cache_timeout: null
+uuid: e7ed5b3f-1285-4a8e-afa6-7e155ecc72ab
+version: 1.0.0
+dataset_uuid: c9b73f7c-7be3-474a-90a0-bb8ee98d132b

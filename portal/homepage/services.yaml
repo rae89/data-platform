@@ -33,6 +33,12 @@
           query: sum(max by (asset) (dagster_asset_row_count{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
           format:
             type: number
+- Analytics:
+  - Superset:
+      href: http://localhost:8088
+      description: Dashboards and SQL Lab on the dbt marts (read-only snapshot)
+      icon: apache-superset.png
+      siteMonitor: http://superset:8088/health
 - Observability:
   - Grafana:
       href: http://localhost:3001

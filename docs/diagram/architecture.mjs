@@ -3,8 +3,8 @@ import { writeFileSync } from "node:fs";
 import * as d3 from "d3";
 import { JSDOM } from "jsdom";
 
-const W = 900, H = 480, NW = 170, NH = 56;
-const color = { dagster: "#4f46e5", storage: "#b45309", obs: "#0f766e", portal: "#475569" };
+const W = 1130, H = 480, NW = 170, NH = 56;
+const color = { dagster: "#4f46e5", storage: "#b45309", obs: "#0f766e", portal: "#475569", bi: "#0369a1" };
 
 const nodes = [
   { id: "schedule", x: 40, y: 80, kind: "dagster", title: "refresh_all", sub: "hourly schedule" },
@@ -17,15 +17,19 @@ const nodes = [
   { id: "vl", x: 490, y: 390, kind: "obs", title: "VictoriaLogs", sub: ":9428" },
   { id: "vmalert", x: 710, y: 210, kind: "obs", title: "vmalert", sub: "sli:* rules, SLO alerts" },
   { id: "grafana", x: 710, y: 345, kind: "obs", title: "Grafana", sub: ":3001 dashboards" },
-  { id: "portal", x: 710, y: 80, kind: "portal", title: "Portal (Homepage)", sub: ":3002 links, health checks" },
-  { id: "github", x: 490, y: 30, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
+  { id: "bi", x: 710, y: 80, kind: "storage", title: "BI snapshot", sub: "data/bi.duckdb (read-only)" },
+  { id: "superset", x: 930, y: 80, kind: "bi", title: "Superset", sub: ":8088 dashboards, SQL Lab" },
+  { id: "github", x: 930, y: 190, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
+  { id: "portal", x: 930, y: 290, kind: "portal", title: "Portal (Homepage)", sub: ":3002 links, health checks" },
 ];
 const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
 // side: "h" connects right edge → left edge, "v" connects bottom → top.
 const edges = [
   { from: "vm", to: "portal", label: "live SLIs" },  // first, so other labels draw over its line
-  { from: "github", to: "portal", label: "feeds" },
+  { from: "github", to: "portal", side: "v", label: "feeds" },
+  { from: "duckdb", to: "bi", label: "copy" },
+  { from: "bi", to: "superset", label: "reads" },
   { from: "schedule", to: "ingest", label: "runs" },
   { from: "ingest", to: "dbt", side: "v", label: "upstream of" },
   { from: "ingest", to: "duckdb", label: "writes raw.*" },
