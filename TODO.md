@@ -73,3 +73,13 @@ showing as failing. The run failure SLI still fires.
 - [ ] In `packages/dagster-victoria-sli/src/dagster_victoria_sli/sensors.py`, export
       `PLANNED` checks whose run has finished as failed (`dagster_asset_check_passed 0`).
 - [ ] Update `test_crashed_check_is_not_reported_as_passing` to expect 0.
+
+## Align revenue definitions across marts
+
+`daily_revenue` excludes returned orders, but `customer_orders.lifetime_value`
+includes them, so the Superset "Sales overview" totals don't add up (the table is
+labelled "incl. returns" for now).
+
+- [ ] Decide whether lifetime value should exclude returns, and change
+      `dbt_project/models/marts/customer_orders.sql` to match `daily_revenue`.
+- [ ] Rename the Superset chart back and re-export `superset/assets/`.

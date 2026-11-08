@@ -1,0 +1,22 @@
+slice_name: Orders
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 1__table
+  viz_type: big_number_total
+  adhoc_filters: []
+  metric:
+    expressionType: SIMPLE
+    column:
+      column_name: orders
+    aggregate: SUM
+    label: Orders
+  y_axis_format: ',d'
+  header_font_size: 0.4
+query_context: null
+cache_timeout: null
+uuid: 819a0483-b1bd-4184-a5e0-7a63ec645c87
+version: 1.0.0
+dataset_uuid: c9b73f7c-7be3-474a-90a0-bb8ee98d132b

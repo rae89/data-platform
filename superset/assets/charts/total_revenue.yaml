@@ -1,0 +1,22 @@
+slice_name: Total revenue
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 1__table
+  viz_type: big_number_total
+  adhoc_filters: []
+  metric:
+    expressionType: SIMPLE
+    column:
+      column_name: revenue
+    aggregate: SUM
+    label: Revenue
+  y_axis_format: $,.0f
+  header_font_size: 0.4
+query_context: null
+cache_timeout: null
+uuid: 0ac47976-e6bb-499d-8415-2b6ee569c8a7
+version: 1.0.0
+dataset_uuid: c9b73f7c-7be3-474a-90a0-bb8ee98d132b

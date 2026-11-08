@@ -1,0 +1,7 @@
+# Superset import bundle (format v1), imported on every start by entrypoint.sh
+# (`superset import-directory --overwrite`). databases/warehouse.yaml is hand-written;
+# datasets, charts and dashboards were exported from Superset. To change a dashboard,
+# edit it in Superset, export it (Dashboards > ... > Export), and replace the files here.
+version: 1.0.0
+type: Dashboard
+timestamp: "2026-11-08T00:00:00+00:00"

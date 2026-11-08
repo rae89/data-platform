@@ -1,0 +1,15 @@
+# The BI snapshot of the dbt marts (written by the bi/marts_snapshot asset), read-only.
+# Never point Superset at data/warehouse.duckdb: an open BI query would block runs.
+database_name: Warehouse (marts)
+sqlalchemy_uri: duckdb:////data/bi.duckdb?access_mode=read_only
+expose_in_sqllab: true
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_file_upload: false
+allow_run_async: false
+cache_timeout: null
+extra:
+  allows_virtual_table_explore: true
+uuid: 5b0b6c5e-2f4a-4d63-9a51-6d6f0c7d2a11
+version: 1.0.0

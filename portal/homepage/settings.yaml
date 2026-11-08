@@ -16,6 +16,10 @@ layout:
     icon: mdi-pipe
     style: row
     columns: 2
+  Analytics:
+    icon: mdi-chart-areaspline
+    style: row
+    columns: 4
   Observability:
     icon: mdi-chart-box-outline
     style: row

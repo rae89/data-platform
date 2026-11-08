@@ -6,3 +6,8 @@ data_platform:
       # Dagster always sets DUCKDB_PATH. The default is for running dbt by hand from this folder.
       path: "{{ env_var('DUCKDB_PATH', '../data/warehouse.duckdb') }}"
       threads: 4
+      # Wait for the lock instead of failing when another process (the BI snapshot)
+      # briefly holds the file. Backs off 1+2+4+8 s; IOException is the lock error.
+      retries:
+        connect_attempts: 5
+        retryable_exceptions: ["IOException"]

@@ -2,7 +2,7 @@
 
 dbt + Dagster + DuckDB, with SLI metrics in VictoriaMetrics and logs in VictoriaLogs.
 
-![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read; the Homepage portal links and health-checks every service, shows live SLIs from VictoriaMetrics and pulls update feeds from GitHub](docs/architecture.svg)
+![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read; a read-only snapshot of the marts feeds Superset; the Homepage portal links and health-checks every service, shows live SLIs from VictoriaMetrics and pulls update feeds from GitHub](docs/architecture.svg)
 
 The diagram is drawn with d3 by `docs/diagram/architecture.mjs`. After editing it,
 run `just diagram` (needs Node) and commit the regenerated `docs/architecture.svg`.
@@ -22,6 +22,7 @@ Start at the portal: one landing page linking every component, with status and l
 |------------------|------------------------|
 | **Portal**       | http://localhost:3002  (landing page) |
 | Dagster          | http://localhost:3000  |
+| Superset         | http://localhost:8088  (dashboards on the marts; log in as `admin`) |
 | Grafana          | http://localhost:3001  (opens the "Data Platform SLIs" dashboard) |
 | VictoriaMetrics  | http://localhost:8428/vmui |
 | VictoriaLogs     | http://localhost:9428/select/vmui |
@@ -88,6 +89,41 @@ Homepage has one page, not a page per service. For more views, put groups on tab
 (`layout.<group>.tab` in `portal/homepage/settings.yaml`) or embed a page with
 Homepage's `iframe` widget.
 
+## Superset
+
+[Superset](https://superset.apache.org) (http://localhost:8088) is for dashboards and
+SQL Lab on the dbt marts. Log in as `admin`.
+
+It never opens `data/warehouse.duckdb`. DuckDB allows one writer process, so an open
+BI query would make the next Dagster run fail. Instead:
+
+1. After the marts update, the `bi/marts_snapshot` asset copies them into
+   `data/bi.duckdb` and swaps the file in atomically. It runs as its own run
+   (`serve_automation` sensor), not inside `refresh_all`, so a snapshot problem never
+   fails the pipeline.
+2. Superset reads that file read-only, with writes (DML, CTAS, uploads) turned off.
+   The connection is defined in `superset/assets/databases/warehouse.yaml` and
+   imported on every start.
+
+Secrets: Superset needs `SUPERSET_SECRET_KEY` and `SUPERSET_ADMIN_PASSWORD`. With
+1Password, create a Login item `data-platform-superset` in the Personal vault with
+a `password` field and a `secret_key` field (`openssl rand -base64 42`); `just up`
+injects them (see `.env.op`). Without 1Password, set them in `.env`. If they're
+missing, Superset exits with a message and everything else runs.
+
+**Starter dashboard:** "Sales overview"
+(http://localhost:8088/superset/dashboard/sales-overview/) has total revenue,
+orders, average order value, customers, daily revenue and the top 10 customers.
+
+![Superset "Sales overview" dashboard with revenue, orders, average order value, customers, a daily revenue line chart and a top customers table](docs/screenshots/superset-dashboard.png)
+
+Dashboards are config-as-code: `superset/assets/` holds the connection, datasets,
+charts and dashboard, and every start imports them with `--overwrite`. To change
+one, edit it in Superset, export it (Dashboards → ⋯ → Export), and replace the files
+in `superset/assets/`, keeping the existing file names. Edits made only in the UI are
+overwritten on the next start. New dashboards you don't export stay in Superset's
+own database (the `superset-home` volume).
+
 ## Dagster project (dg)
 
 The project was scaffolded with `create-dagster project` and is managed with the
@@ -113,12 +149,14 @@ src/data_platform/
   defs/
     dbt/defs.yaml            DbtProjectComponent: dbt models → assets, tests → checks
     ingest.py                raw.customers, raw.orders (synthetic data, replace with real sources)
+    bi.py                    bi/marts_snapshot: read-only copy of the marts for Superset
     resources.py             DuckDB resource and in-process executor
     schedules.py             refresh_all job, hourly
     sli/defs.yaml            SliSensorsComponent: exports SLIs to VictoriaMetrics
 packages/dagster-victoria-sli/  shared package: SliSensorsComponent and VictoriaLogsHandler
 vmalert/rules.yml            SLI recording rules and SLO alerts
 grafana/                     datasources and the SLI dashboard
+superset/                    Superset image (DuckDB driver), config and imported connection
 portal/catalog.yaml          every component, for the portal landing page (`just portal`)
 portal/homepage/             Homepage config; services.yaml is generated from the catalog
 docs/diagram/                d3 script that renders docs/architecture.svg (`just diagram`)
