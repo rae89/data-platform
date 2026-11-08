@@ -13,6 +13,9 @@ models:
     staging:
       +materialized: view
       +schema: staging
+      # Models on dlt sources load daily with them (job ingest_sources), group `sources`.
+      portwatch:
+        +meta: {dagster: {group: sources}}
     marts:
       +materialized: table
       +schema: marts

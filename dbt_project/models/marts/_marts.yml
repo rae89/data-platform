@@ -11,3 +11,14 @@ models:
     columns:
       - name: order_date
         data_tests: [unique, not_null]
+  - name: port_daily_activity
+    config:
+      meta: {dagster: {group: sources}}  # built only on daily dlt sources
+    description: Daily container activity per port with 7-day averages (IMF PortWatch, estimated).
+    columns:
+      - name: activity_date
+        data_tests: [not_null]
+      - name: port_id
+        data_tests: [not_null]
+      - name: port_name
+        data_tests: [not_null]

@@ -32,7 +32,10 @@ def test_dashboard_bundle_references_resolve():
     charts = {c["uuid"]: c for c in load_assets("charts")}
     assert all(d["database_uuid"] in db_uuids for d in load_assets("datasets"))
     assert all(c["dataset_uuid"] in datasets for c in charts.values())
+    placed = []
     for dash in load_assets("dashboards"):
         slots = [v["meta"] for v in dash["position"].values() if isinstance(v, dict) and v.get("type") == "CHART"]
-        assert sorted(m["uuid"] for m in slots) == sorted(charts), dash["dashboard_title"]
+        assert all(m.get("uuid") in charts for m in slots), dash["dashboard_title"]
         assert all(m["sliceName"] == charts[m["uuid"]]["slice_name"] for m in slots)
+        placed += [m["uuid"] for m in slots]
+    assert sorted(placed) == sorted(charts)  # every chart is on exactly one dashboard

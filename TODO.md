@@ -26,12 +26,6 @@ The top-level `tests/` folder is empty.
 - [ ] Add a smoke test that materializes every asset against a temporary DuckDB
       file, to catch broken SQL and dbt/Dagster wiring.
 
-## Fix stale comment in `_sources.yml`
-
-- [ ] `dbt_project/models/staging/_sources.yml` says ingest lives in
-      `src/data_platform/assets/ingest.py`. It's actually in
-      `src/data_platform/defs/ingest.py`.
-
 ## Add tracing with VictoriaTraces
 
 One trace per Dagster run, with each asset/step as a span and each dbt model as a
@@ -83,3 +77,13 @@ labelled "incl. returns" for now).
 - [ ] Decide whether lifetime value should exclude returns, and change
       `dbt_project/models/marts/customer_orders.sql` to match `daily_revenue`.
 - [ ] Rename the Superset chart back and re-export `superset/assets/`.
+
+## Per-group freshness thresholds in Grafana
+
+The `sources` group loads daily (alert `AssetStaleDaily`, 26h), but the Grafana
+"Asset age" panel and the freshness heatmap still color everything against 2h, so
+daily sources show as stale most of the day.
+
+- [ ] In `grafana/dashboards/data-platform-slis.json` and
+      `dagster-asset-freshness.json`, use a 26h threshold for `group="sources"`
+      (or split the panels by group).

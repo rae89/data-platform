@@ -36,6 +36,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
 
 - `src/data_platform/defs/`: Dagster definitions, loaded automatically by
   `definitions.py`. New files need no registration.
+  - `sources/<name>/`: one dlt source per folder (`defs.yaml` + `loads.py`), using
+    the `DltWarehouseLoads` component. Assets `<name>/<table>`, schema `<name>`.
   - `ingest.py`: raw assets (synthetic data for now). Asset keys `raw/*` match the
     dbt source `raw`.
   - `dbt/defs.yaml`: `DbtProjectComponent`. Each dbt model is an asset, each test
@@ -44,6 +46,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
   - `resources.py`, `schedules.py`: DuckDB resource, executor, hourly `refresh_all`.
   - `bi.py`: `bi/marts_snapshot`, a read-only copy of the marts (`data/bi.duckdb`)
     for Superset. Runs as its own run via the `serve_automation` sensor.
+- `src/data_platform/components/`: project components (`DltWarehouseLoads`: dlt into
+  the warehouse with this platform's conventions, plus its `dg scaffold` template).
 - `dbt_project/`: dbt models (`staging` → `marts`) and tests.
 - `packages/dagster-victoria-sli/`: shared, separately installable package
   (uv workspace member) with the SLI sensors component and the VictoriaLogs handler.
@@ -70,6 +74,15 @@ After changing dbt models, run `just defs-state` (and `just check`).
   Open it read-only for inspection: `duckdb -readonly data/warehouse.duckdb`.
   BI tools (Superset) read `data/bi.duckdb`, never the warehouse: even a read-only
   query holds a lock that makes the next run fail.
+- **New data sources use dlt.** Scaffold with
+  `uv run dg scaffold defs data_platform.components.DltWarehouseLoads sources/<name>`,
+  keep `source.max_table_nesting = 0` (one table per resource; unnest JSON in dbt
+  staging), and add dbt sources/staging under `dbt_project/models/staging/<name>/`.
+  Don't install `dlt[duckdb]`: its extra caps duckdb below 2.0.
+- **Sources run daily in their own job.** dlt assets and dbt models built only on
+  them are in the `sources` group: job `ingest_sources` (06:30 UTC), excluded from
+  `refresh_all`, freshness alert `AssetStaleDaily` (26h) instead of `AssetStale` (2h).
+  Tag new source folders and marts with `meta.dagster.group: sources` in dbt.
 - **Assets don't push metrics.** They record `dagster/row_count` metadata and check
   results. The SLI sensors export that state to VictoriaMetrics. Follow this pattern
   for new assets.

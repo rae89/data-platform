@@ -1,7 +1,7 @@
 version: 2
 
 sources:
-  # Loaded by the Python assets in src/data_platform/assets/ingest.py.
+  # Loaded by the Python assets in src/data_platform/defs/ingest.py.
   # dagster-dbt maps source `raw.orders` to the asset key ["raw", "orders"].
   - name: raw
     schema: raw

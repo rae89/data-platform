@@ -1,0 +1,6 @@
+type: data_platform.components.DltWarehouseLoads
+
+attributes:
+  loads:
+    - source: .loads.source
+      pipeline: .loads.pipeline

@@ -3,24 +3,25 @@ import { writeFileSync } from "node:fs";
 import * as d3 from "d3";
 import { JSDOM } from "jsdom";
 
-const W = 1130, H = 480, NW = 170, NH = 56;
+const W = 1130, H = 540, NW = 170, NH = 56;
 const color = { dagster: "#4f46e5", storage: "#b45309", obs: "#0f766e", portal: "#475569", bi: "#0369a1" };
 
 const nodes = [
-  { id: "schedule", x: 40, y: 80, kind: "dagster", title: "refresh_all", sub: "hourly schedule" },
-  { id: "ingest", x: 250, y: 80, kind: "dagster", title: "Ingest assets", sub: "raw/* (ingest.py)" },
-  { id: "dbt", x: 250, y: 190, kind: "dagster", title: "dbt models + tests", sub: "staging → marts, checks" },
-  { id: "sensors", x: 250, y: 300, kind: "dagster", title: "SLI sensors", sub: "dagster-victoria-sli" },
-  { id: "logs", x: 250, y: 390, kind: "dagster", title: "VictoriaLogs handler", sub: "ships run logs" },
-  { id: "duckdb", x: 490, y: 135, kind: "storage", title: "DuckDB", sub: "data/warehouse.duckdb" },
-  { id: "vm", x: 490, y: 300, kind: "obs", title: "VictoriaMetrics", sub: ":8428" },
-  { id: "vl", x: 490, y: 390, kind: "obs", title: "VictoriaLogs", sub: ":9428" },
-  { id: "vmalert", x: 710, y: 210, kind: "obs", title: "vmalert", sub: "sli:* rules, SLO alerts" },
-  { id: "grafana", x: 710, y: 345, kind: "obs", title: "Grafana", sub: ":3001 dashboards" },
-  { id: "bi", x: 710, y: 80, kind: "storage", title: "BI snapshot", sub: "data/bi.duckdb (read-only)" },
-  { id: "superset", x: 930, y: 80, kind: "bi", title: "Superset", sub: ":8088 dashboards, SQL Lab" },
-  { id: "github", x: 930, y: 190, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
-  { id: "portal", x: 930, y: 290, kind: "portal", title: "Portal (Homepage)", sub: ":3002 links, health checks" },
+  { id: "schedule", x: 40, y: 140, kind: "dagster", title: "Schedules", sub: "refresh_all hourly, sources daily" },
+  { id: "ingest", x: 250, y: 140, kind: "dagster", title: "Ingest (Python, dlt)", sub: "raw/*, sources/<name>/*" },
+  { id: "dbt", x: 250, y: 250, kind: "dagster", title: "dbt models + tests", sub: "staging → marts, checks" },
+  { id: "sensors", x: 250, y: 360, kind: "dagster", title: "SLI sensors", sub: "dagster-victoria-sli" },
+  { id: "logs", x: 250, y: 450, kind: "dagster", title: "VictoriaLogs handler", sub: "ships run logs" },
+  { id: "duckdb", x: 490, y: 195, kind: "storage", title: "DuckDB", sub: "data/warehouse.duckdb" },
+  { id: "vm", x: 490, y: 360, kind: "obs", title: "VictoriaMetrics", sub: ":8428" },
+  { id: "vl", x: 490, y: 450, kind: "obs", title: "VictoriaLogs", sub: ":9428" },
+  { id: "vmalert", x: 710, y: 270, kind: "obs", title: "vmalert", sub: "sli:* rules, SLO alerts" },
+  { id: "grafana", x: 710, y: 405, kind: "obs", title: "Grafana", sub: ":3001 dashboards" },
+  { id: "apis", x: 250, y: 8, kind: "portal", title: "Source APIs", sub: "IMF PortWatch (ArcGIS)" },
+  { id: "bi", x: 710, y: 140, kind: "storage", title: "BI snapshot", sub: "data/bi.duckdb (read-only)" },
+  { id: "superset", x: 930, y: 140, kind: "bi", title: "Superset", sub: ":8088 dashboards, SQL Lab" },
+  { id: "github", x: 930, y: 250, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
+  { id: "portal", x: 930, y: 350, kind: "portal", title: "Portal (Homepage)", sub: ":3002 links, health checks" },
 ];
 const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
@@ -28,11 +29,12 @@ const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 const edges = [
   { from: "vm", to: "portal", label: "live SLIs" },  // first, so other labels draw over its line
   { from: "github", to: "portal", side: "v", label: "feeds" },
+  { from: "apis", to: "ingest", side: "v", label: "dlt" },
   { from: "duckdb", to: "bi", label: "copy" },
   { from: "bi", to: "superset", label: "reads" },
   { from: "schedule", to: "ingest", label: "runs" },
   { from: "ingest", to: "dbt", side: "v", label: "upstream of" },
-  { from: "ingest", to: "duckdb", label: "writes raw.*" },
+  { from: "ingest", to: "duckdb", label: "loads" },
   { from: "dbt", to: "duckdb", label: "builds models" },
   { from: "sensors", to: "vm", label: "pushes SLIs" },
   { from: "logs", to: "vl", label: "run logs" },
@@ -54,9 +56,9 @@ svg.append("defs").append("marker")
   .append("path").attr("d", "M0,0L10,5L0,10z").attr("fill", "#64748b");
 
 // Dagster code location boundary.
-svg.append("rect").attr("x", 20).attr("y", 30).attr("width", 430).attr("height", 435)
+svg.append("rect").attr("x", 20).attr("y", 90).attr("width", 430).attr("height", 435)
   .attr("rx", 12).attr("fill", "#eef2ff").attr("stroke", color.dagster).attr("stroke-dasharray", "6 4");
-svg.append("text").attr("x", 36).attr("y", 54).attr("font-size", 14).attr("font-weight", 600)
+svg.append("text").attr("x", 36).attr("y", 114).attr("font-size", 14).attr("font-weight", 600)
   .attr("fill", color.dagster).text("Dagster · code location data_platform");
 
 const link = d3.linkHorizontal();
