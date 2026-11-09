@@ -28,8 +28,8 @@ Start at the portal: one landing page linking every component, with status and l
 | VictoriaLogs     | http://localhost:9428/select/vmui |
 | vmalert          | http://localhost:8880  |
 
-The `refresh_all` job runs every hour. To run it now, open Dagster, go to
-Jobs → refresh_all → Materialize all.
+The `ingest_sources` job runs daily at 06:30 UTC. To run it now, open Dagster, go to
+Jobs → ingest_sources → Materialize all.
 
 For local development with hot reload, run `just dev` (`dg dev`). It runs Dagster
 on your machine against the same Victoria stack and the same DuckDB file.
@@ -40,7 +40,7 @@ The portal landing page: every component with its status, live SLIs, the last Da
 
 ![Portal landing page with tiles for Dagster, Grafana, VictoriaMetrics, VictoriaLogs and vmalert, status dots and live SLI values](docs/screenshots/portal.png)
 
-A `refresh_all` run in Dagster: every step succeeded and all dbt tests passed as asset checks.
+A Dagster run (taken with the earlier synthetic-data job `refresh_all`): every step succeeded and all dbt tests passed as asset checks.
 
 ![Dagster run page for refresh_all showing a successful run and passing dbt asset checks](docs/screenshots/dagster-run.png)
 
@@ -99,7 +99,7 @@ BI query would make the next Dagster run fail. Instead:
 
 1. After the marts update, the `bi/marts_snapshot` asset copies them into
    `data/bi.duckdb` and swaps the file in atomically. It runs as its own run
-   (`serve_automation` sensor), not inside `refresh_all`, so a snapshot problem never
+   (`serve_automation` sensor), not inside `ingest_sources`, so a snapshot problem never
    fails the pipeline.
 2. Superset reads that file read-only, with writes (DML, CTAS, uploads) turned off.
    The connection is defined in `superset/assets/databases/warehouse.yaml` and
@@ -111,12 +111,6 @@ a `password` field and a `secret_key` field (`openssl rand -base64 42`); `just u
 injects them (see `.env.op`). Without 1Password, set them in `.env`. If they're
 missing, Superset exits with a message and everything else runs.
 
-**Starter dashboard:** "Sales overview"
-(http://localhost:8088/superset/dashboard/sales-overview/) has total revenue,
-orders, average order value, customers, daily revenue and the top 10 customers.
-
-![Superset "Sales overview" dashboard with revenue, orders, average order value, customers, a daily revenue line chart and a top customers table](docs/screenshots/superset-dashboard.png)
-
 **Port activity (LA-Long Beach)**
 (http://localhost:8088/superset/dashboard/port-activity/): IMF PortWatch data from
 `marts.port_daily_activity`. Container ship calls and container import/export volumes
@@ -127,7 +121,7 @@ Volumes are PortWatch estimates from ship tracking data.
 ![Superset "Port activity" dashboard with container calls, imports and exports, daily calls, imports vs. exports since 2019 and calls per day by year](docs/screenshots/superset-port-dashboard.png)
 
 Dashboards are config-as-code: `superset/assets/` holds the connection, datasets,
-charts and dashboard, and every start imports them with `--overwrite`. To change
+charts and dashboards, and every start imports them with `--overwrite`. To change
 one, edit it in Superset, export it (Dashboards → ⋯ → Export), and replace the files
 in `superset/assets/`, keeping the existing file names. Edits made only in the UI are
 overwritten on the next start. New dashboards you don't export stay in Superset's
@@ -143,9 +137,7 @@ one schema per source, and dbt builds on top of them. Current sources:
 | `portwatch` | [IMF PortWatch](https://portwatch.imf.org): daily port calls and trade volumes for Los Angeles-Long Beach, estimated from ship tracking (AIS) data | Daily, about 9 days behind | `marts.port_daily_activity` |
 
 Sources run in their own job, `ingest_sources`, daily at 06:30 UTC, together with the
-dbt models built on them (all in the `sources` group). `refresh_all` stays hourly and
-excludes them, so an outage at an external API never fails the internal pipeline.
-Sources load incrementally.
+dbt models built on them (all in the `sources` group). Sources load incrementally.
 
 Each source is one folder under `src/data_platform/defs/sources/`, using the
 `DltWarehouseLoads` component (`src/data_platform/components/dlt_warehouse.py`). Every
@@ -204,11 +196,10 @@ src/data_platform/
   definitions.py             entry point: loads everything in defs/ (scaffolded by dg)
   defs/
     dbt/defs.yaml            DbtProjectComponent: dbt models → assets, tests → checks
-    ingest.py                raw.customers, raw.orders (synthetic data)
     sources/<name>/          one dlt source each (defs.yaml + loads.py), e.g. portwatch
     bi.py                    bi/marts_snapshot: read-only copy of the marts for Superset
     resources.py             DuckDB resource and in-process executor
-    schedules.py             refresh_all job, hourly
+    schedules.py             ingest_sources job, daily
     sli/defs.yaml            SliSensorsComponent: exports SLIs to VictoriaMetrics
 packages/dagster-victoria-sli/  shared package: SliSensorsComponent and VictoriaLogsHandler
 vmalert/rules.yml            SLI recording rules and SLO alerts
@@ -259,7 +250,7 @@ In Grafana, or at http://localhost:9428/select/vmui, using LogsQL:
 ```
 service:dagster level:error
 service:dagster run_id:"<run id>"
-service:dagster job:refresh_all | stats by (event_type) count()
+service:dagster job:ingest_sources | stats by (event_type) count()
 ```
 
 ## Notes

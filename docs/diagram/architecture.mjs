@@ -7,8 +7,8 @@ const W = 1130, H = 540, NW = 170, NH = 56;
 const color = { dagster: "#4f46e5", storage: "#b45309", obs: "#0f766e", portal: "#475569", bi: "#0369a1" };
 
 const nodes = [
-  { id: "schedule", x: 40, y: 140, kind: "dagster", title: "Schedules", sub: "refresh_all hourly, sources daily" },
-  { id: "ingest", x: 250, y: 140, kind: "dagster", title: "Ingest (Python, dlt)", sub: "raw/*, sources/<name>/*" },
+  { id: "schedule", x: 40, y: 140, kind: "dagster", title: "Schedules", sub: "ingest_sources daily" },
+  { id: "ingest", x: 250, y: 140, kind: "dagster", title: "Ingest (dlt)", sub: "sources/<name>/*" },
   { id: "dbt", x: 250, y: 250, kind: "dagster", title: "dbt models + tests", sub: "staging → marts, checks" },
   { id: "sensors", x: 250, y: 360, kind: "dagster", title: "SLI sensors", sub: "dagster-victoria-sli" },
   { id: "logs", x: 250, y: 450, kind: "dagster", title: "VictoriaLogs handler", sub: "ships run logs" },

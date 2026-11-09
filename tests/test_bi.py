@@ -7,11 +7,11 @@ from dagster_duckdb import DuckDBResource
 from data_platform.defs import bi
 
 
-def make_warehouse(path, orders_rows):
+def make_warehouse(path, activity_rows):
     with duckdb.connect(str(path)) as conn:
         conn.execute("create schema marts")
-        conn.execute("create table marts.customer_orders as select 1 as customer_id")
-        conn.execute(f"create table marts.daily_revenue as select * from range({orders_rows}) t(d)")
+        conn.execute("create table marts.port_summary as select 1 as port_id")
+        conn.execute(f"create table marts.port_daily_activity as select * from range({activity_rows}) t(d)")
 
 
 def snapshot(warehouse, instance):
@@ -24,7 +24,7 @@ def test_snapshot_copies_marts_and_never_blocks_on_readers(tmp_path, monkeypatch
     warehouse = tmp_path / "warehouse.duckdb"
     target = tmp_path / "bi.duckdb"
     monkeypatch.setattr(bi, "BI_DUCKDB_PATH", target)
-    make_warehouse(warehouse, orders_rows=3)
+    make_warehouse(warehouse, activity_rows=3)
 
     with dg.instance_for_test() as instance:
         assert snapshot(warehouse, instance)["rows_copied"].value == 1 + 3
@@ -32,13 +32,13 @@ def test_snapshot_copies_marts_and_never_blocks_on_readers(tmp_path, monkeypatch
         # A BI query holds the snapshot open while the next run replaces it.
         reader = duckdb.connect(str(target), read_only=True)
         with duckdb.connect(str(warehouse)) as conn:
-            conn.execute("insert into marts.daily_revenue select 99")
+            conn.execute("insert into marts.port_daily_activity select 99")
         assert snapshot(warehouse, instance)["rows_copied"].value == 1 + 4
-        assert reader.execute("select count(*) from marts.daily_revenue").fetchone()[0] == 3
+        assert reader.execute("select count(*) from marts.port_daily_activity").fetchone()[0] == 3
         reader.close()
 
     with duckdb.connect(str(target), read_only=True) as conn:
-        assert conn.execute("select count(*) from marts.daily_revenue").fetchone()[0] == 4
+        assert conn.execute("select count(*) from marts.port_daily_activity").fetchone()[0] == 4
         assert not (tmp_path / "bi.duckdb.tmp").exists()
 
 
@@ -55,9 +55,9 @@ def test_snapshot_copies_new_marts_and_survives_a_crashed_run(tmp_path, monkeypa
     folder.mkdir()
     warehouse, target = folder / "warehouse.duckdb", folder / "bi.duckdb"
     monkeypatch.setattr(bi, "BI_DUCKDB_PATH", target)
-    make_warehouse(warehouse, orders_rows=2)
+    make_warehouse(warehouse, activity_rows=2)
     with duckdb.connect(str(warehouse)) as conn:
-        conn.execute("create table marts.product_sales as select 7 as units")  # a new mart
+        conn.execute("create table marts.port_rankings as select 7 as units")  # a new mart
     # Leftovers from a run killed mid-copy.
     (folder / "bi.duckdb.tmp").write_bytes(b"partial")
     (folder / "bi.duckdb.tmp.wal").write_bytes(b"stale wal")
@@ -67,4 +67,4 @@ def test_snapshot_copies_new_marts_and_survives_a_crashed_run(tmp_path, monkeypa
     assert meta["tables"].value == 3
     assert "dagster/row_count" not in meta  # would double-count rows in the SLIs
     with duckdb.connect(str(target), read_only=True) as conn:
-        assert conn.execute("select units from marts.product_sales").fetchall() == [(7,)]
+        assert conn.execute("select units from marts.port_rankings").fetchall() == [(7,)]
