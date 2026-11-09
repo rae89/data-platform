@@ -27,17 +27,9 @@ groups:
         annotations:
           summary: "Job {{ $labels.job }} success rate is {{ $value | humanizePercentage }} (SLO 95%)"
 
-      # Assets outside the `sources` group (none yet). Sources load daily: see AssetStaleDaily.
+      # Every asset refreshes daily (job ingest_sources at 06:30 UTC, then the snapshot).
       - alert: AssetStale
-        expr: sli:asset_staleness_seconds{group!="sources"} > 2 * 3600
-        for: 5m
-        labels: {severity: warning}
-        annotations:
-          summary: "{{ $labels.asset }} not refreshed for {{ $value | humanizeDuration }} (SLO 2h)"
-
-      # dlt sources and their dbt models (job ingest_sources, daily at 06:30 UTC).
-      - alert: AssetStaleDaily
-        expr: sli:asset_staleness_seconds{group="sources"} > 26 * 3600
+        expr: sli:asset_staleness_seconds > 26 * 3600
         for: 5m
         labels: {severity: warning}
         annotations:

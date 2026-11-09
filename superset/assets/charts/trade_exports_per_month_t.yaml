@@ -1,0 +1,36 @@
+slice_name: Exports per month (t)
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number
+params:
+  datasource: 2__table
+  viz_type: big_number
+  time_range: No filter
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: is_complete_month
+    clause: WHERE
+  - expressionType: SIMPLE
+    subject: month
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    clause: WHERE
+  x_axis: month
+  time_grain_sqla: P1M
+  metric:
+    expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_total
+    aggregate: SUM
+    label: Exports
+  show_trend_line: true
+  start_y_axis_at_zero: false
+  y_axis_format: .3s
+  compare_lag: 12
+  compare_suffix: vs. a year earlier
+query_context: null
+cache_timeout: null
+uuid: 2c5a0f70-bb0f-46a8-b7df-0548fa558009
+version: 1.0.0
+dataset_uuid: 81c3c66b-353a-4a67-a6b7-6a278b55e630

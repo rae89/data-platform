@@ -10,12 +10,13 @@ clean-targets: ["target", "dbt_packages"]
 
 models:
   data_platform:
+    # Dagster asset groups by layer: dlt loads are `source`, staging is `transform`,
+    # marts are `metrics` (read in src/data_platform/defs/dbt/defs.yaml).
     staging:
       +materialized: view
       +schema: staging
-      # Models on dlt sources load daily with them (job ingest_sources), group `sources`.
-      portwatch:
-        +meta: {dagster: {group: sources}}
+      +meta: {dagster: {group: transform}}
     marts:
       +materialized: table
       +schema: marts
+      +meta: {dagster: {group: metrics}}

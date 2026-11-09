@@ -1,9 +1,11 @@
 import dagster as dg
 
-# dlt sources (defs/sources/) and the dbt models on them. bi/marts_snapshot (group
-# `serve`) runs after them on its own (defs/bi.py). Daily fits sources that publish
-# daily (IMF PortWatch); change the cron if a faster source is added.
-ingest_sources = dg.define_asset_job("ingest_sources", selection=dg.AssetSelection.groups("sources"))
+# The daily pipeline: dlt loads (group `source`), dbt staging (`transform`) and marts
+# (`metrics`). bi/marts_snapshot (`serve`) runs after it on its own (defs/bi.py).
+# Daily fits sources that publish daily (IMF PortWatch).
+ingest_sources = dg.define_asset_job(
+    "ingest_sources", selection=dg.AssetSelection.groups("source", "transform", "metrics")
+)
 
 ingest_sources_daily = dg.ScheduleDefinition(
     job=ingest_sources,

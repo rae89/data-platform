@@ -69,15 +69,23 @@ showing as failing. The run failure SLI still fires.
 - [ ] Update `test_crashed_check_is_not_reported_as_passing` to expect 0.
 
 
-## Per-group freshness thresholds in Grafana
+## Daily freshness thresholds in Grafana
 
-The `sources` group loads daily (alert `AssetStaleDaily`, 26h), but the Grafana
+Every asset loads daily (alert `AssetStale`, 26h), but the Grafana
 "Asset age" panel and the freshness heatmap still color everything against 2h, so
-daily sources show as stale most of the day.
+assets show as stale most of the day.
 
 - [ ] In `grafana/dashboards/data-platform-slis.json` and
-      `dagster-asset-freshness.json`, use a 26h threshold for `group="sources"`
-      (or split the panels by group).
+      `dagster-asset-freshness.json`, use a 26h threshold.
+
+## Port filter on "Trade trends" before adding a second port
+
+`port_monthly_trade` stores year-over-year change per port, and the "Change vs. a year
+earlier" chart shows `MAX` of it, which is only right for one port. Sums and cargo per
+call already aggregate correctly.
+
+- [ ] When a second port is added to `PORTS` in `sources/portwatch/loads.py`, add a port
+      filter to the "Trade trends" dashboard and re-export `superset/assets/`.
 
 ## Retake the README screenshots
 

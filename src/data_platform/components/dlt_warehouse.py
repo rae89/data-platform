@@ -75,7 +75,7 @@ class DltWarehouseLoadsScaffolder(dg.Scaffolder):
 class DltWarehouseLoads(dagster_dlt.DltLoadCollectionComponent):
     """dlt loads into the warehouse, with this platform's conventions.
 
-    - Asset key `<source>/<resource>` in the `sources` group (loaded daily by the
+    - Asset key `<source>/<resource>` in the `source` group (loaded daily by the
       ingest_sources job), matching dbt sources.
     - No placeholder upstream assets (dagster-dlt adds one per resource by default).
     - Records `dagster/row_count`, which the SLI sensors export.
@@ -86,7 +86,7 @@ class DltWarehouseLoads(dagster_dlt.DltLoadCollectionComponent):
         return spec.replace_attributes(
             key=dg.AssetKey([data.resource.source_name, data.resource.name]),
             deps=[],
-            group_name="sources",
+            group_name="source",
         )
 
     def execute(self, context: dg.AssetExecutionContext, dlt_pipeline_resource):

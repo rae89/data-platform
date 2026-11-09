@@ -18,7 +18,7 @@ def fake_api(pages, calls):
     (rows, True) when the API should report that more pages follow."""
 
     def get(url, params, timeout):
-        calls.append(params)
+        calls.append({**params, "url": url})
         page = pages[len(calls) - 1]
         rows, more = page if isinstance(page, tuple) else (page, False)
         return FakeResponse(
@@ -32,7 +32,7 @@ def day(d, calls=1):
     return {"portid": "port664", "date": d, "portcalls": calls}
 
 
-def run(tmp_path, monkeypatch, pages, ports=None):
+def run(tmp_path, monkeypatch, pages, ports=None, table="daily_ports"):
     calls = []
     monkeypatch.setattr(loads.requests, "get", fake_api(pages, calls))
     pipeline = dlt.pipeline(
@@ -41,7 +41,7 @@ def run(tmp_path, monkeypatch, pages, ports=None):
         dataset_name="portwatch",
         pipelines_dir=str(tmp_path / ".dlt"),
     )
-    source = loads.portwatch()
+    source = loads.portwatch().with_resources(table)
     if ports:
         source.daily_ports.bind(ports=ports)
     source.max_table_nesting = 0
@@ -75,7 +75,7 @@ def test_api_errors_fail_the_load(tmp_path, monkeypatch):
             destination=dlt.destinations.duckdb(str(tmp_path / "e.duckdb")),
             pipelines_dir=str(tmp_path / ".dlt"),
         )
-        run_pipeline.run(loads.portwatch())
+        run_pipeline.run(loads.portwatch().with_resources("daily_ports"))
 
 
 def test_no_new_days_keeps_the_cursor(tmp_path, monkeypatch):
@@ -91,3 +91,18 @@ def test_a_newly_added_port_backfills_from_the_start(tmp_path, monkeypatch):
                 ports={"port664": "LA-LB", "port815": "NY-NJ"})
     assert "portid = 'port664' AND date >= '2026-10-06'" in calls[0]["where"]  # lookback
     assert "portid = 'port815' AND date >= '2019-01-01'" in calls[1]["where"]  # full history
+
+
+def test_chokepoints_load_all_chokepoints_incrementally(tmp_path, monkeypatch):
+    def transit(d, cp="chokepoint2", n=1):
+        return {"portid": cp, "portname": cp, "date": d, "n_total": n}
+
+    first = run(tmp_path, monkeypatch, [[transit("2026-10-20"), transit("2026-10-20", "chokepoint1")]],
+                table="daily_chokepoints")
+    assert first[0]["url"] == loads.CHOKEPOINTS_URL
+    assert first[0]["where"] == "date >= '2019-01-01'"  # every chokepoint, full history
+    second = run(tmp_path, monkeypatch, [[transit("2026-10-20", n=5)]], table="daily_chokepoints")
+    assert second[0]["where"] == "date >= '2026-10-06'"
+    with duckdb.connect(str(tmp_path / "w.duckdb"), read_only=True) as conn:
+        rows = conn.execute("select portid, n_total from portwatch.daily_chokepoints order by 1").fetchall()
+    assert rows == [("chokepoint1", 1), ("chokepoint2", 5)]  # revisions merge by (chokepoint, date)

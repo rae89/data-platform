@@ -1,0 +1,46 @@
+slice_name: Change vs. a year earlier
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_line
+  time_range: Last 3 years
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: is_complete_month
+    clause: WHERE
+  - expressionType: SIMPLE
+    subject: month
+    operator: TEMPORAL_RANGE
+    comparator: Last 3 years
+    clause: WHERE
+  x_axis: month
+  time_grain_sqla: P1M
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: import_tonnes_total_yoy
+    aggregate: MAX
+    label: Imports
+  - expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_total_yoy
+    aggregate: MAX
+    label: Exports
+  - expressionType: SIMPLE
+    column:
+      column_name: calls_total_yoy
+    aggregate: MAX
+    label: Ship calls
+  groupby: []
+  row_limit: 10000
+  show_legend: true
+  rich_tooltip: true
+  y_axis_format: .0%
+query_context: null
+cache_timeout: null
+uuid: 2e37da7a-7b51-41e7-ac91-9fb5958e314f
+version: 1.0.0
+dataset_uuid: 81c3c66b-353a-4a67-a6b7-6a278b55e630

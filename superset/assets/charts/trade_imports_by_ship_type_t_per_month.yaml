@@ -1,0 +1,57 @@
+slice_name: Imports by ship type (t per month)
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_bar
+  time_range: No filter
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: is_complete_month
+    clause: WHERE
+  - expressionType: SIMPLE
+    subject: month
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    clause: WHERE
+  x_axis: month
+  time_grain_sqla: P1M
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: import_tonnes_container
+    aggregate: SUM
+    label: Container
+  - expressionType: SIMPLE
+    column:
+      column_name: import_tonnes_dry_bulk
+    aggregate: SUM
+    label: Dry bulk
+  - expressionType: SIMPLE
+    column:
+      column_name: import_tonnes_general_cargo
+    aggregate: SUM
+    label: General cargo
+  - expressionType: SIMPLE
+    column:
+      column_name: import_tonnes_roro
+    aggregate: SUM
+    label: Ro-ro
+  - expressionType: SIMPLE
+    column:
+      column_name: import_tonnes_tanker
+    aggregate: SUM
+    label: Tanker
+  groupby: []
+  row_limit: 10000
+  show_legend: true
+  rich_tooltip: true
+  y_axis_format: .3s
+  stack: Stack
+query_context: null
+cache_timeout: null
+uuid: 4a1b8e8a-5fe0-48cf-b92e-3ff87b9cc02f
+version: 1.0.0
+dataset_uuid: 81c3c66b-353a-4a67-a6b7-6a278b55e630

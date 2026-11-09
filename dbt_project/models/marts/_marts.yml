@@ -2,8 +2,6 @@ version: 2
 
 models:
   - name: port_daily_activity
-    config:
-      meta: {dagster: {group: sources}}  # built only on daily dlt sources
     description: Daily container activity per port with 7-day averages (IMF PortWatch, estimated).
     columns:
       - name: activity_date
@@ -11,4 +9,28 @@ models:
       - name: port_id
         data_tests: [not_null]
       - name: port_name
+        data_tests: [not_null]
+  - name: port_monthly_trade
+    description: >
+      Monthly ship calls and trade volumes (metric tons) per port and ship type, trade
+      balance, cargo per container call and year-over-year change (IMF PortWatch, estimated).
+    columns:
+      - name: port_id
+        data_tests: [not_null]
+      - name: month
+        data_tests: [not_null]
+      - name: is_complete_month
+        data_tests: [not_null]
+  - name: chokepoint_monthly_transits
+    description: >
+      Monthly ship transits and cargo volumes (metric tons) through 28 maritime
+      chokepoints by ship type, with year-over-year change (IMF PortWatch, estimated).
+    columns:
+      - name: chokepoint_id
+        data_tests: [not_null]
+      - name: chokepoint_name
+        data_tests: [not_null]
+      - name: month
+        data_tests: [not_null]
+      - name: is_complete_month
         data_tests: [not_null]

@@ -7,3 +7,5 @@ sources:
     tables:
       - name: daily_ports
         description: Estimated daily port calls and trade volumes per port, from AIS data.
+      - name: daily_chokepoints
+        description: Estimated daily transits and trade volumes through 28 maritime chokepoints, from AIS data.

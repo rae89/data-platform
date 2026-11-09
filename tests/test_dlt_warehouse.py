@@ -53,7 +53,7 @@ def test_new_source_scaffolds_and_loads_into_duckdb(tmp_path):
             assert isinstance(component, DltWarehouseLoads)
             spec = next(iter(defs.resolve_all_asset_specs()))
             assert spec.key == dg.AssetKey(["demo", "items"])  # matches dbt source demo.items
-            assert spec.group_name == "sources" and not spec.deps  # loaded by the daily job
+            assert spec.group_name == "source" and not spec.deps  # loaded by the daily job
 
             with dg.instance_for_test() as instance:
                 result = dg.materialize(

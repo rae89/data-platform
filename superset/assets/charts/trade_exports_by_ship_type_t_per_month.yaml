@@ -1,0 +1,57 @@
+slice_name: Exports by ship type (t per month)
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_bar
+  time_range: No filter
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: is_complete_month
+    clause: WHERE
+  - expressionType: SIMPLE
+    subject: month
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    clause: WHERE
+  x_axis: month
+  time_grain_sqla: P1M
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_container
+    aggregate: SUM
+    label: Container
+  - expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_dry_bulk
+    aggregate: SUM
+    label: Dry bulk
+  - expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_general_cargo
+    aggregate: SUM
+    label: General cargo
+  - expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_roro
+    aggregate: SUM
+    label: Ro-ro
+  - expressionType: SIMPLE
+    column:
+      column_name: export_tonnes_tanker
+    aggregate: SUM
+    label: Tanker
+  groupby: []
+  row_limit: 10000
+  show_legend: true
+  rich_tooltip: true
+  y_axis_format: .3s
+  stack: Stack
+query_context: null
+cache_timeout: null
+uuid: dbba3d23-7010-4839-9cf1-2e3a9743ddc4
+version: 1.0.0
+dataset_uuid: 81c3c66b-353a-4a67-a6b7-6a278b55e630

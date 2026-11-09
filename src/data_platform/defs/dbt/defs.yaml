@@ -8,6 +8,6 @@ attributes:
   include_metadata:
     - row_count
   translation:
-    # `transform`, unless the model sets meta.dagster.group (e.g. `sources` for models
-    # built only on daily dlt sources; see dbt_project.yml).
+    # From meta.dagster.group: `transform` for staging, `metrics` for marts
+    # (dbt_project.yml). `transform` if a model sets none.
     group_name: "{{ node.get('meta', {}).get('dagster', {}).get('group', 'transform') }}"
