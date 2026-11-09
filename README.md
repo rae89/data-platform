@@ -120,6 +120,17 @@ Volumes are PortWatch estimates from ship tracking data.
 
 ![Superset "Port activity" dashboard with container calls, imports and exports, daily calls, imports vs. exports since 2019 and calls per day by year](docs/screenshots/superset-port-dashboard.png)
 
+**Trade trends (IMF PortWatch)**
+(http://localhost:8088/superset/dashboard/trade-trends/): monthly views from
+`marts.port_monthly_trade` and `marts.chokepoint_monthly_transits`, complete months only:
+
+1. Imports, exports and trade balance (metric tons), each vs. a year earlier.
+2. Imports and exports by ship type: container, dry bulk, general cargo, ro-ro, tanker.
+3. Year-over-year change in imports, exports and ship calls, last 3 years.
+4. Cargo per container ship call, a proxy for ship size and how full ships are.
+5. Transits through the Panama Canal, Suez Canal, Bab el-Mandeb and Cape of Good Hope,
+   which show Red Sea rerouting since late 2023.
+
 Dashboards are config-as-code: `superset/assets/` holds the connection, datasets,
 charts and dashboards, and every start imports them with `--overwrite`. To change
 one, edit it in Superset, export it (Dashboards → ⋯ → Export), and replace the files
@@ -134,10 +145,17 @@ one schema per source, and dbt builds on top of them. Current sources:
 
 | Source | Data | Updates | Mart |
 |--------|------|---------|------|
-| `portwatch` | [IMF PortWatch](https://portwatch.imf.org): daily port calls and trade volumes for Los Angeles-Long Beach, estimated from ship tracking (AIS) data | Daily, about 9 days behind | `marts.port_daily_activity` |
+| `portwatch` | [IMF PortWatch](https://portwatch.imf.org): daily port calls and trade volumes (metric tons, by ship type) for Los Angeles-Long Beach, and transits through 28 chokepoints, estimated from ship tracking (AIS) data | Daily, about 9 days behind | `marts.port_daily_activity`, `marts.port_monthly_trade`, `marts.chokepoint_monthly_transits` |
 
-Sources run in their own job, `ingest_sources`, daily at 06:30 UTC, together with the
-dbt models built on them (all in the `sources` group). Sources load incrementally.
+Sources run in the `ingest_sources` job, daily at 06:30 UTC, together with the dbt
+models built on them. Sources load incrementally. Assets are grouped by layer:
+
+| Group | Assets |
+|-------|--------|
+| `source` | dlt loads: `<source>/<table>`, e.g. `portwatch/daily_ports` |
+| `transform` | dbt staging models (`staging/*`) |
+| `metrics` | dbt marts (`marts/*`) |
+| `serve` | `bi/marts_snapshot`, the read-only copy for Superset (runs on its own) |
 
 Each source is one folder under `src/data_platform/defs/sources/`, using the
 `DltWarehouseLoads` component (`src/data_platform/components/dlt_warehouse.py`). Every
@@ -154,9 +172,8 @@ To add a source:
    For APIs `rest_api_source` can't express (like PortWatch's ArcGIS query), write a
    small `@dlt.resource` instead; see `sources/portwatch/loads.py`.
 3. Add dbt models in `dbt_project/models/staging/<name>/`: a `_<name>__sources.yml`
-   with `schema: <name>`, then staging models. Put the folder in the `sources` group
-   in `dbt_project.yml` (`+meta: {dagster: {group: sources}}`), and any mart built only
-   on daily sources too. Run `just defs-state` and `just check`.
+   with `schema: <name>`, then staging models (group `transform` automatically).
+   Run `just defs-state` and `just check`.
 
 **Inspecting pipelines:** `just dlt-dashboard` opens dlt's dashboard at
 http://localhost:2718 (dependency group `dashboard`, local only; started through dlt's
@@ -218,7 +235,7 @@ docker/dagster.yaml          Dagster config inside Docker
 | SLI | Metric | SLO (in vmalert/rules.yml) |
 |-----|--------|-----|
 | Pipeline success rate | `dagster_run_success{job}` (1/0 per run) | ≥ 95% over 7 days |
-| Freshness | `dagster_asset_age_seconds{asset,group}` (also `..._last_materialized_timestamp_seconds`) | refreshed within 2h; 26h for the daily `sources` group |
+| Freshness | `dagster_asset_age_seconds{asset,group}` (also `..._last_materialized_timestamp_seconds`) | refreshed within 26h (daily pipeline) |
 | Coverage | `dagster_asset_materialized{asset,group}` (1/0, every asset) | every asset has run |
 | Data quality | `dagster_asset_check_passed{asset,check}` (dbt tests and any other checks) | all checks passing |
 | Run duration | `dagster_run_duration_seconds{job,status}` | dashboard only |

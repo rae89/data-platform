@@ -1,0 +1,46 @@
+slice_name: 'Chokepoint transits per month: Panama Canal and Red Sea routes'
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 3__table
+  viz_type: echarts_timeseries_line
+  time_range: No filter
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: is_complete_month
+    clause: WHERE
+  - expressionType: SIMPLE
+    subject: chokepoint_name
+    operator: IN
+    comparator:
+    - Panama Canal
+    - Suez Canal
+    - Bab el-Mandeb Strait
+    - Cape of Good Hope
+    clause: WHERE
+  - expressionType: SIMPLE
+    subject: month
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    clause: WHERE
+  x_axis: month
+  time_grain_sqla: P1M
+  metrics:
+  - expressionType: SIMPLE
+    column:
+      column_name: transits_total
+    aggregate: SUM
+    label: Transits
+  groupby:
+  - chokepoint_name
+  row_limit: 10000
+  show_legend: true
+  rich_tooltip: true
+  y_axis_format: ',.0f'
+query_context: null
+cache_timeout: null
+uuid: 884c58e4-0617-473c-ae84-3aa846510097
+version: 1.0.0
+dataset_uuid: 220fb49d-6b6f-4f9a-9239-b36cbc0a4c71

@@ -7,3 +7,11 @@ models:
         data_tests: [not_null]
       - name: activity_date
         data_tests: [not_null]
+  - name: stg_portwatch__daily_chokepoints
+    columns:
+      - name: chokepoint_id
+        data_tests: [not_null]
+      - name: chokepoint_name
+        data_tests: [not_null]
+      - name: activity_date
+        data_tests: [not_null]

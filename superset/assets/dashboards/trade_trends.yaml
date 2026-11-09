@@ -1,0 +1,198 @@
+dashboard_title: Trade trends (IMF PortWatch)
+description: null
+css: null
+slug: trade-trends
+certified_by: null
+certification_details: null
+published: true
+uuid: 1e56e683-0d63-41f5-a756-de6026245c6e
+position:
+  DASHBOARD_VERSION_KEY: v2
+  ROOT_ID:
+    type: ROOT
+    id: ROOT_ID
+    children:
+    - GRID_ID
+  GRID_ID:
+    type: GRID
+    id: GRID_ID
+    children:
+    - ROW-1
+    - ROW-2
+    - ROW-3
+    - ROW-4
+    parents:
+    - ROOT_ID
+  HEADER_ID:
+    id: HEADER_ID
+    type: HEADER
+    meta:
+      text: Trade trends (IMF PortWatch)
+  ROW-1:
+    type: ROW
+    id: ROW-1
+    children:
+    - CHART-imports
+    - CHART-exports
+    - CHART-balance
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-imports:
+    type: CHART
+    id: CHART-imports
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-1
+    meta:
+      width: 4
+      height: 40
+      uuid: 3f171092-fe1f-49f1-95e5-129e4a0e5e4f
+      sliceName: Imports per month (t)
+      chartId: 101
+  CHART-exports:
+    type: CHART
+    id: CHART-exports
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-1
+    meta:
+      width: 4
+      height: 40
+      uuid: 2c5a0f70-bb0f-46a8-b7df-0548fa558009
+      sliceName: Exports per month (t)
+      chartId: 102
+  CHART-balance:
+    type: CHART
+    id: CHART-balance
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-1
+    meta:
+      width: 4
+      height: 40
+      uuid: 408ced6d-f35e-4040-bd8f-d5ba878713eb
+      sliceName: Trade balance per month (t, exports - imports)
+      chartId: 103
+  ROW-2:
+    type: ROW
+    id: ROW-2
+    children:
+    - CHART-imports_by_type
+    - CHART-exports_by_type
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-imports_by_type:
+    type: CHART
+    id: CHART-imports_by_type
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      width: 6
+      height: 60
+      uuid: 4a1b8e8a-5fe0-48cf-b92e-3ff87b9cc02f
+      sliceName: Imports by ship type (t per month)
+      chartId: 104
+  CHART-exports_by_type:
+    type: CHART
+    id: CHART-exports_by_type
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      width: 6
+      height: 60
+      uuid: dbba3d23-7010-4839-9cf1-2e3a9743ddc4
+      sliceName: Exports by ship type (t per month)
+      chartId: 105
+  ROW-3:
+    type: ROW
+    id: ROW-3
+    children:
+    - CHART-yoy
+    - CHART-per_call
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-yoy:
+    type: CHART
+    id: CHART-yoy
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-3
+    meta:
+      width: 8
+      height: 60
+      uuid: 2e37da7a-7b51-41e7-ac91-9fb5958e314f
+      sliceName: Change vs. a year earlier
+      chartId: 106
+  CHART-per_call:
+    type: CHART
+    id: CHART-per_call
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-3
+    meta:
+      width: 4
+      height: 60
+      uuid: a37725b4-26e3-4552-b2e4-0725865a87e6
+      sliceName: Cargo per container ship call (t)
+      chartId: 107
+  ROW-4:
+    type: ROW
+    id: ROW-4
+    children:
+    - CHART-chokepoints
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-chokepoints:
+    type: CHART
+    id: CHART-chokepoints
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-4
+    meta:
+      width: 12
+      height: 60
+      uuid: 884c58e4-0617-473c-ae84-3aa846510097
+      sliceName: 'Chokepoint transits per month: Panama Canal and Red Sea routes'
+      chartId: 108
+metadata:
+  refresh_frequency: 0
+  color_scheme: supersetColors
+  timed_refresh_immune_slices: []
+  expanded_slices: {}
+  label_colors: {}
+  shared_label_colors: []
+  map_label_colors: {}
+  color_scheme_domain: []
+  cross_filters_enabled: true
+theme_uuid: null
+version: 1.0.0

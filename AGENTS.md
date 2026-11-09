@@ -78,9 +78,10 @@ After changing dbt models, run `just defs-state` (and `just check`).
   keep `source.max_table_nesting = 0` (one table per resource; unnest JSON in dbt
   staging), and add dbt sources/staging under `dbt_project/models/staging/<name>/`.
   Don't install `dlt[duckdb]`: its extra caps duckdb below 2.0.
-- **Sources run daily in their own job.** dlt assets and dbt models built only on
-  them are in the `sources` group: job `ingest_sources` (06:30 UTC), freshness alert `AssetStaleDaily` (26h) instead of `AssetStale` (2h).
-  Tag new source folders and marts with `meta.dagster.group: sources` in dbt.
+- **Asset groups follow the layers.** dlt loads are `source`, dbt staging is
+  `transform`, dbt marts are `metrics` (set per folder in `dbt_project.yml`), the BI
+  snapshot is `serve`. Job `ingest_sources` builds the first three daily (06:30 UTC);
+  freshness alert `AssetStale` fires after 26h.
 - **Assets don't push metrics.** They record `dagster/row_count` metadata and check
   results. The SLI sensors export that state to VictoriaMetrics. Follow this pattern
   for new assets.

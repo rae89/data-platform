@@ -22,7 +22,11 @@ from data_platform.defs.resources import DUCKDB_PATH
 BI_DUCKDB_PATH = Path(DUCKDB_PATH).with_name("bi.duckdb")
 # Every mart the snapshot copies: they trigger it and gate it on their dbt tests.
 # tests/test_definitions.py fails if a mart is missing here.
-MARTS = [["marts", "port_daily_activity"]]
+MARTS = [
+    ["marts", "port_daily_activity"],
+    ["marts", "port_monthly_trade"],
+    ["marts", "chokepoint_monthly_transits"],
+]
 
 
 @dg.asset(
