@@ -44,6 +44,16 @@ components:
               query: sum(max by (asset) (dagster_asset_row_count{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
               format: {type: number}
 
+  - name: dlt dashboard
+    group: Orchestration
+    description: "dlt pipelines - runs, schema, state. Start it with: just dlt-dashboard"
+    url: http://localhost:2718
+    # Runs on the host only while `just dlt-dashboard` is up, so red usually means "not started".
+    # It binds to 127.0.0.1: Docker Desktop reaches that via host.docker.internal, Linux
+    # Docker doesn't (the dot stays red there; don't bind 0.0.0.0, it's a data browser).
+    health: http://host.docker.internal:2718/
+    icon: mdi-database-import
+
   - name: Superset
     group: Analytics
     description: Dashboards and SQL Lab on the dbt marts (read-only snapshot)

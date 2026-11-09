@@ -33,6 +33,11 @@
           query: sum(max by (asset) (dagster_asset_row_count{env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"}))
           format:
             type: number
+  - dlt dashboard:
+      href: http://localhost:2718
+      description: 'dlt pipelines - runs, schema, state. Start it with: just dlt-dashboard'
+      icon: mdi-database-import
+      siteMonitor: http://host.docker.internal:2718/
 - Analytics:
   - Superset:
       href: http://localhost:8088

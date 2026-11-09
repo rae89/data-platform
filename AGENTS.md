@@ -24,6 +24,7 @@ just check           # validate definitions and component YAML (uv run dg check 
 just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
 just cov             # tests with coverage, fails below 99%
+just dlt-dashboard   # dlt pipeline dashboard (schema, state, loads), :2718
 just portal          # render the portal landing page from portal/catalog.yaml
 just diagram         # re-render docs diagrams (docs/diagram/*.mjs → docs/*.svg)
 uv run dg list defs  # list assets, checks, jobs, sensors

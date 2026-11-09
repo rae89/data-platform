@@ -50,6 +50,18 @@ portal:
     uv run python portal/render_homepage.py
     docker compose restart portal
 
+# Pipelines store their warehouse path only at run time, so it's passed in, read-only
+# (AGENTS.md: other processes open the warehouse read-only). `dlt dashboard` requires
+# the commercial dlt[hub]; dlt's own run_dashboard() (open source) doesn't.
+# dlt dashboard (http://localhost:2718): pipelines, schema, state, loads and run traces
+dlt-dashboard:
+    #!/usr/bin/env sh
+    set -e
+    db="${DUCKDB_PATH:-{{ justfile_directory() }}/data/warehouse.duckdb}"
+    export DESTINATION__DUCKDB__CREDENTIALS__DATABASE="$db"
+    export DESTINATION__DUCKDB__CREDENTIALS__READ_ONLY=true
+    uv run --group dashboard python -c "from dlt._workspace.helpers.dashboard.runner import run_dashboard; run_dashboard(pipelines_dir='$(dirname "$db")/.dlt', port=2718)"
+
 # Follow Dagster container logs
 logs:
     docker compose logs -f dagster

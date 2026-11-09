@@ -87,3 +87,12 @@ daily sources show as stale most of the day.
 - [ ] In `grafana/dashboards/data-platform-slis.json` and
       `dagster-asset-freshness.json`, use a 26h threshold for `group="sources"`
       (or split the panels by group).
+
+## dlt dashboard: browse table rows with DuckDB 2.0
+
+`just dlt-dashboard` shows pipelines, schema, state and loads, but browsing table
+rows fails: dlt 1.32 calls DuckDB's `fetch_arrow_table()`, removed in DuckDB 2.0
+(dlt's `duckdb` extra still caps duckdb below 2.0).
+
+- [ ] When a dlt release supports DuckDB 2.0, upgrade dlt and check the dashboard's
+      data browser and "Load row counts".

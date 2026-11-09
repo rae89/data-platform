@@ -18,6 +18,7 @@ const nodes = [
   { id: "vmalert", x: 710, y: 270, kind: "obs", title: "vmalert", sub: "sli:* rules, SLO alerts" },
   { id: "grafana", x: 710, y: 405, kind: "obs", title: "Grafana", sub: ":3001 dashboards" },
   { id: "apis", x: 250, y: 8, kind: "portal", title: "Source APIs", sub: "IMF PortWatch (ArcGIS)" },
+  { id: "dltdash", x: 710, y: 40, kind: "portal", title: "dlt dashboard", sub: ":2718 on demand, read-only" },
   { id: "bi", x: 710, y: 140, kind: "storage", title: "BI snapshot", sub: "data/bi.duckdb (read-only)" },
   { id: "superset", x: 930, y: 140, kind: "bi", title: "Superset", sub: ":8088 dashboards, SQL Lab" },
   { id: "github", x: 930, y: 250, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
@@ -27,6 +28,7 @@ const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
 // side: "h" connects right edge → left edge, "v" connects bottom → top.
 const edges = [
+  { from: "duckdb", to: "dltdash", label: "inspects" },  // early, so later labels draw over it
   { from: "vm", to: "portal", label: "live SLIs" },  // first, so other labels draw over its line
   { from: "github", to: "portal", side: "v", label: "feeds" },
   { from: "apis", to: "ingest", side: "v", label: "dlt" },

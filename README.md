@@ -166,6 +166,16 @@ To add a source:
    in `dbt_project.yml` (`+meta: {dagster: {group: sources}}`), and any mart built only
    on daily sources too. Run `just defs-state` and `just check`.
 
+**Inspecting pipelines:** `just dlt-dashboard` opens dlt's dashboard at
+http://localhost:2718 (dependency group `dashboard`, local only; started through dlt's
+open-source `run_dashboard()`, so the commercial `dlt[hub]` that `dlt dashboard` asks
+for isn't needed). It shows each pipeline's last run,
+load packages, schema and write dispositions, state (e.g. PortWatch's per-port
+cursors) and run traces. Browsing table rows doesn't work yet: dlt 1.32 reads results
+with an API DuckDB 2.0 removed; use Superset SQL Lab or `duckdb -readonly` instead.
+It opens the warehouse read-only, and only while a query runs, so it can't write; a
+query that happens to run while Dagster writes can still briefly block that run.
+
 Secrets for a source go in `.env.op` (1Password) and are read by dlt from the
 environment, e.g. `SOURCES__<NAME>__ACCESS_TOKEN`.
 
