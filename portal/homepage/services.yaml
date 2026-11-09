@@ -12,15 +12,15 @@
         headers:
           Content-Type: application/json
         requestBody:
-          query: '{ runsOrError(filter: {pipelineName: "refresh_all"}, limit: 1) {
-            ... on Runs { results { status } } } }'
+          query: '{ runsOrError(filter: {pipelineName: "ingest_sources"}, limit: 1)
+            { ... on Runs { results { status } } } }'
         mappings:
         - field:
             data:
               runsOrError:
                 results:
                   0: status
-          label: Last refresh_all run
+          label: Last ingest_sources run
       - type: prometheusmetric
         url: http://victoriametrics:8428
         metrics:

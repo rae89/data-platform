@@ -5,7 +5,7 @@ make the next run fail. So BI tools never open the warehouse: this asset copies 
 marts into a separate file after each build and swaps it in atomically. A query that
 is still reading the old file keeps its copy; new queries see the new one.
 
-It runs as its own run (eager automation), not inside refresh_all: dagster-dbt keeps
+It runs as its own run (eager automation), not inside ingest_sources: dagster-dbt keeps
 dbt's DuckDB connection open in the run process, and DuckDB won't open the same file
 again in that process. A separate run also means a snapshot failure never fails the
 pipeline run.
@@ -22,7 +22,7 @@ from data_platform.defs.resources import DUCKDB_PATH
 BI_DUCKDB_PATH = Path(DUCKDB_PATH).with_name("bi.duckdb")
 # Every mart the snapshot copies: they trigger it and gate it on their dbt tests.
 # tests/test_definitions.py fails if a mart is missing here.
-MARTS = [["marts", "customer_orders"], ["marts", "daily_revenue"], ["marts", "port_daily_activity"]]
+MARTS = [["marts", "port_daily_activity"]]
 
 
 @dg.asset(

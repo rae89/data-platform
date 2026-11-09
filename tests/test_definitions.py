@@ -11,12 +11,6 @@ def test_definitions_load_every_asset_job_and_sensor():
     repo = loaded.get_repository_def()
 
     assert {k.to_user_string() for k in repo.asset_graph.get_all_asset_keys()} == {
-        "raw/customers",
-        "raw/orders",
-        "staging/stg_customers",
-        "staging/stg_orders",
-        "marts/customer_orders",
-        "marts/daily_revenue",
         "bi/marts_snapshot",
         "portwatch/daily_ports",
         "staging/stg_portwatch__daily_ports",
@@ -27,15 +21,10 @@ def test_definitions_load_every_asset_job_and_sensor():
     snapshot = dg.AssetKey(["bi", "marts_snapshot"])
     marts = {k for k in graph.get_all_asset_keys() if k.path[0] == "marts"}
     assert set(graph.get(snapshot).parent_keys) == marts  # every mart triggers and gates it
-    assert repo.has_job("refresh_all")
-    # The snapshot runs on its own (see defs/bi.py), never inside refresh_all.
-    # External sources run daily in their own job, so an outage can't fail refresh_all.
-    sources = {k for k in graph.get_all_asset_keys() if graph.get(k).group_name == "sources"}
-    assert {k for k in graph.get_all_asset_keys() if k.path[0] == "portwatch"} <= sources
-    assert repo.get_job("ingest_sources").asset_layer.executable_asset_keys == sources
-    job_keys = repo.get_job("refresh_all").asset_layer.executable_asset_keys
-    assert job_keys == set(graph.get_all_asset_keys()) - {snapshot} - sources
-    assert {s.name for s in loaded.schedules} == {"refresh_all_schedule", "ingest_sources_schedule"}
+    # The daily job builds everything except the snapshot, which runs on its own (defs/bi.py).
+    job_keys = repo.get_job("ingest_sources").asset_layer.executable_asset_keys
+    assert job_keys == set(graph.get_all_asset_keys()) - {snapshot}
+    assert {s.name for s in loaded.schedules} == {"ingest_sources_schedule"}
     assert {s.name for s in loaded.sensors} == {
         "asset_sli",
         "run_success_sli",

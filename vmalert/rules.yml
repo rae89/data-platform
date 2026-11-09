@@ -27,7 +27,7 @@ groups:
         annotations:
           summary: "Job {{ $labels.job }} success rate is {{ $value | humanizePercentage }} (SLO 95%)"
 
-      # Hourly assets (refresh_all). The `sources` group loads daily: see AssetStaleDaily.
+      # Assets outside the `sources` group (none yet). Sources load daily: see AssetStaleDaily.
       - alert: AssetStale
         expr: sli:asset_staleness_seconds{group!="sources"} > 2 * 3600
         for: 5m

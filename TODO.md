@@ -45,8 +45,8 @@ run page.
       VictoriaTraces.
 - [ ] Link logs and traces in Grafana: `run_id` on a log line opens the trace, and a
       span opens its logs filtered by `run_id`.
-- [ ] Later, once ingestion pulls from real sources: add live OpenTelemetry spans in
-      `defs/ingest.py` (auto-instrument `requests` and DB drivers) to see individual
+- [ ] Add live OpenTelemetry spans in the dlt sources (`defs/sources/*/loads.py`,
+      auto-instrument `requests`) to see individual
       API calls and retries.
 
 ## Rewrite existing docs in the PRs-and-docs style
@@ -68,15 +68,6 @@ showing as failing. The run failure SLI still fires.
       `PLANNED` checks whose run has finished as failed (`dagster_asset_check_passed 0`).
 - [ ] Update `test_crashed_check_is_not_reported_as_passing` to expect 0.
 
-## Align revenue definitions across marts
-
-`daily_revenue` excludes returned orders, but `customer_orders.lifetime_value`
-includes them, so the Superset "Sales overview" totals don't add up (the table is
-labelled "incl. returns" for now).
-
-- [ ] Decide whether lifetime value should exclude returns, and change
-      `dbt_project/models/marts/customer_orders.sql` to match `daily_revenue`.
-- [ ] Rename the Superset chart back and re-export `superset/assets/`.
 
 ## Per-group freshness thresholds in Grafana
 
@@ -87,6 +78,14 @@ daily sources show as stale most of the day.
 - [ ] In `grafana/dashboards/data-platform-slis.json` and
       `dagster-asset-freshness.json`, use a 26h threshold for `group="sources"`
       (or split the panels by group).
+
+## Retake the README screenshots
+
+The Dagster, Grafana and VictoriaLogs screenshots show `refresh_all`, the synthetic-data
+job that was removed; the portal one shows its widget.
+
+- [ ] Run `ingest_sources`, then retake `docs/screenshots/{portal,dagster-run,grafana-sli-dashboard,victorialogs-run-logs}.png`
+      and update their captions in `README.md`.
 
 ## dlt dashboard: browse table rows with DuckDB 2.0
 

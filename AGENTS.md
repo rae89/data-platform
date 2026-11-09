@@ -39,12 +39,10 @@ After changing dbt models, run `just defs-state` (and `just check`).
   `definitions.py`. New files need no registration.
   - `sources/<name>/`: one dlt source per folder (`defs.yaml` + `loads.py`), using
     the `DltWarehouseLoads` component. Assets `<name>/<table>`, schema `<name>`.
-  - `ingest.py`: raw assets (synthetic data for now). Asset keys `raw/*` match the
-    dbt source `raw`.
   - `dbt/defs.yaml`: `DbtProjectComponent`. Each dbt model is an asset, each test
     an asset check.
   - `sli/defs.yaml`: `SliSensorsComponent` config.
-  - `resources.py`, `schedules.py`: DuckDB resource, executor, hourly `refresh_all`.
+  - `resources.py`, `schedules.py`: DuckDB resource, executor, daily `ingest_sources`.
   - `bi.py`: `bi/marts_snapshot`, a read-only copy of the marts (`data/bi.duckdb`)
     for Superset. Runs as its own run via the `serve_automation` sensor.
 - `src/data_platform/components/`: project components (`DltWarehouseLoads`: dlt into
@@ -81,8 +79,7 @@ After changing dbt models, run `just defs-state` (and `just check`).
   staging), and add dbt sources/staging under `dbt_project/models/staging/<name>/`.
   Don't install `dlt[duckdb]`: its extra caps duckdb below 2.0.
 - **Sources run daily in their own job.** dlt assets and dbt models built only on
-  them are in the `sources` group: job `ingest_sources` (06:30 UTC), excluded from
-  `refresh_all`, freshness alert `AssetStaleDaily` (26h) instead of `AssetStale` (2h).
+  them are in the `sources` group: job `ingest_sources` (06:30 UTC), freshness alert `AssetStaleDaily` (26h) instead of `AssetStale` (2h).
   Tag new source folders and marts with `meta.dagster.group: sources` in dbt.
 - **Assets don't push metrics.** They record `dagster/row_count` metadata and check
   results. The SLI sensors export that state to VictoriaMetrics. Follow this pattern
