@@ -8,8 +8,11 @@ over Tailscale.
 
 ## One-time setup (about 30 minutes)
 
-1. **Cloudflare:** add your domain as a zone, open Zero Trust once to pick a team name
-   (`<team>.cloudflareaccess.com`), and create an API token with Account: Cloudflare
+1. **Cloudflare:** register a new domain for the platform in Cloudflare (Domain
+   Registration → Register Domains, about $10 to $12/year for a `.com`); its DNS is on
+   Cloudflare from the start. Don't reuse the domains in Route 53: they carry live
+   sites, and moving their DNS risks breaking them. Then open Zero Trust once to pick
+   a team name (`<team>.cloudflareaccess.com`), and create an API token with Account: Cloudflare
    Tunnel Edit, Account: Access: Apps and Policies Edit, Account: Access: Organizations,
    Identity Providers, and Groups Edit, and Zone: DNS Edit.
 2. **Google:** in Google Cloud Console → APIs & Services → Credentials, create an OAuth
