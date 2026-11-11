@@ -15,6 +15,20 @@ interrupted spot instance can leave Dagster in a bad state.
 - [ ] Back up `data/` and the Docker volumes (EBS snapshots via Data Lifecycle Manager).
 - [ ] Check that `tofu destroy` cancels the persistent spot request.
 
+## Deploy `infra/` from GitHub Actions
+
+`tofu apply` runs from a laptop, so changes skip review and nobody sees the plan.
+Start with plain GitHub Actions; switch to Digger (OpenTaco, open source, runs in
+Actions) for plan comments on PRs or more stacks. Skip Atlantis: it needs inbound
+webhooks. Needs the S3 backend above. About 1 to 2 hours.
+
+- [ ] Add a GitHub OIDC provider and a deploy role in `infra/`, limited to this repo,
+      so CI holds no AWS keys.
+- [ ] Add `.github/workflows/infra.yml`: `tofu fmt -check`, `validate` and `plan` on
+      PRs that touch `infra/`; `apply` on merge to `main`.
+- [ ] Put `apply` behind a GitHub Environment with a required reviewer.
+- [ ] Document the flow in `infra/README.md`.
+
 ## Demo access: self-approved read-only visitors, Cloudflare Access as the only login
 
 To show the platform to customers or hiring managers without handing out passwords:
