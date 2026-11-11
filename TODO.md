@@ -14,9 +14,29 @@ interrupted spot instance can leave Dagster in a bad state.
 - [ ] Move OpenTofu state to an S3 backend.
 - [ ] Back up `data/` and the Docker volumes (EBS snapshots via Data Lifecycle Manager).
 - [ ] Check that `tofu destroy` cancels the persistent spot request.
-- [ ] Sign people into Grafana and Superset with the Cloudflare Access identity
-      (`Cf-Access-Authenticated-User-Email`; Grafana auth proxy) instead of anonymous
-      Admin and a shared `admin` login, and set Grafana's `root_url`.
+
+## Demo access: self-approved read-only visitors, Cloudflare Access as the only login
+
+To show the platform to customers or hiring managers without handing out passwords:
+visitors sign in with an emailed one-time code and get read-only access; you keep full
+access with Google. Today anyone let in gets Dagster run controls, Grafana Admin and
+the VictoriaMetrics delete API. About 6 to 8 hours; needs the domain (`infra/README.md`).
+
+- [ ] Add a one-time-PIN identity provider and a demo Access application in
+      `infra/public.tf`: any verified email (or emails ending in listed domains), 4-hour
+      sessions, only the portal, Superset, Grafana and a read-only Dagster. Keep the
+      writable Dagster and the Victoria UIs and APIs admin-only (`allowed_emails`).
+- [ ] Run a second Dagster web server with `--read-only` for the demo hostname.
+- [ ] Grafana: `[auth.jwt]` on the `Cf-Access-Jwt-Assertion` header, checked against
+      `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`; admin emails get
+      Admin, everyone else Viewer; turn off the login form and anonymous access; set
+      `root_url`. Only via env on the server, so `just up` locally stays as it is.
+- [ ] Superset: check the same signed token in `superset_config.py` (not the plain
+      email header, which anyone reaching the server directly can fake), create users
+      on first visit; admin emails get Admin, everyone else a dashboards-only role with
+      no SQL Lab (DuckDB can read any file in the container). Add tests.
+- [ ] Keep a local admin login as a backup for SSM port forwarding and Tailscale,
+      which bypass Cloudflare and carry no token.
 
 ## Send alerts somewhere
 
