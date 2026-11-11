@@ -90,7 +90,8 @@ services:
     image: ghcr.io/gethomepage/homepage:v2.7.0
     environment:
       # Homepage rejects requests whose Host isn't listed (it only allows :3000 by default).
-      HOMEPAGE_ALLOWED_HOSTS: localhost:3002,127.0.0.1:3002
+      # Behind Cloudflare or Tailscale, set it in .env to add the portal's hostname.
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-localhost:3002,127.0.0.1:3002}
       # Read-only GitHub token for the "Platform changes" feed (set it in .env).
       HOMEPAGE_VAR_GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       # `env` label the SLI widgets filter on (same default as the dagster service).

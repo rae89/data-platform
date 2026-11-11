@@ -33,3 +33,37 @@ variable "tailscale_auth_key_parameter" {
   type        = string
   default     = "/data-platform/tailscale-auth-key"
 }
+
+# Public access (public.tf). Set CLOUDFLARE_API_TOKEN in the environment.
+
+variable "domain" {
+  description = "Cloudflare zone (e.g. example.com). Services get <prefix><name>.<domain>."
+  type        = string
+}
+
+variable "hostname_prefix" {
+  description = "Prefix for every hostname, e.g. \"dp-\" gives dp-dagster.example.com."
+  type        = string
+  default     = ""
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account that owns the zone and Zero Trust."
+  type        = string
+}
+
+variable "allowed_emails" {
+  description = "Google accounts allowed to sign in."
+  type        = list(string)
+}
+
+variable "google_client_id" {
+  description = "OAuth client ID of a Google Cloud \"Web application\" client."
+  type        = string
+}
+
+variable "google_client_secret" {
+  description = "Its secret. Pass with TF_VAR_google_client_secret (e.g. from 1Password via op run)."
+  type        = string
+  sensitive   = true
+}

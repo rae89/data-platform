@@ -14,6 +14,9 @@ interrupted spot instance can leave Dagster in a bad state.
 - [ ] Move Terraform state to an S3 backend.
 - [ ] Back up `data/` and the Docker volumes (EBS snapshots via Data Lifecycle Manager).
 - [ ] Check that `terraform destroy` cancels the persistent spot request.
+- [ ] Sign people into Grafana and Superset with the Cloudflare Access identity
+      (`Cf-Access-Authenticated-User-Email`; Grafana auth proxy) instead of anonymous
+      Admin and a shared `admin` login, and set Grafana's `root_url`.
 
 ## Send alerts somewhere
 

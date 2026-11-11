@@ -1,5 +1,6 @@
 # One EC2 instance runs the whole stack with `docker compose` (DuckDB wants one machine).
-# No inbound ports: reach services over Tailscale, or a shell via SSM Session Manager.
+# No inbound ports: the public reaches services through Cloudflare Access (public.tf);
+# admins also have Tailscale, and a shell via SSM Session Manager.
 
 data "aws_ec2_instance_type" "this" {
   instance_type = var.instance_type
@@ -56,15 +57,15 @@ resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-resource "aws_iam_role_policy" "tailscale_key" {
-  name = "read-tailscale-auth-key"
+resource "aws_iam_role_policy" "boot_secrets" {
+  name = "read-boot-secrets"
   role = aws_iam_role.this.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
       Action   = "ssm:GetParameter"
-      Resource = data.aws_ssm_parameter.tailscale_auth_key.arn
+      Resource = [data.aws_ssm_parameter.tailscale_auth_key.arn, aws_ssm_parameter.tunnel_token.arn]
     }]
   })
 }
@@ -84,6 +85,7 @@ resource "aws_instance" "this" {
     region              = var.region
     tailscale_key_param = var.tailscale_auth_key_parameter
     tailscale_hostname  = "data-platform-${var.env}"
+    tunnel_token_param  = aws_ssm_parameter.tunnel_token.name
   })
 
   dynamic "instance_market_options" {
