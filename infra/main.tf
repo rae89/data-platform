@@ -65,7 +65,7 @@ resource "aws_iam_role_policy" "boot_secrets" {
     Statement = [{
       Effect   = "Allow"
       Action   = "ssm:GetParameter"
-      Resource = [data.aws_ssm_parameter.tailscale_auth_key.arn, aws_ssm_parameter.tunnel_token.arn]
+      Resource = concat([data.aws_ssm_parameter.tailscale_auth_key.arn], aws_ssm_parameter.tunnel_token[*].arn)
     }]
   })
 }
@@ -85,7 +85,7 @@ resource "aws_instance" "this" {
     region              = var.region
     tailscale_key_param = var.tailscale_auth_key_parameter
     tailscale_hostname  = "data-platform-${var.env}"
-    tunnel_token_param  = aws_ssm_parameter.tunnel_token.name
+    tunnel_token_param  = one(aws_ssm_parameter.tunnel_token[*].name) # null without a domain
   })
 
   dynamic "instance_market_options" {

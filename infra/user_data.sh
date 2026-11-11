@@ -1,6 +1,6 @@
 #!/bin/bash
-# First boot only (cloud-init). Installs Docker, just, Tailscale and cloudflared, then
-# joins the tailnet and starts the Cloudflare tunnel. Deploying the repo is a manual
+# First boot only (cloud-init). Installs Docker, just and Tailscale and joins the
+# tailnet; with a domain, also installs cloudflared and starts the Cloudflare tunnel. Deploying the repo is a manual
 # step for now (infra/README.md).
 set -euxo pipefail
 
@@ -17,7 +17,9 @@ key=$(aws ssm get-parameter --region ${region} --name "${tailscale_key_param}" \
 # --ssh: Tailscale SSH, so no SSH port or key pair is needed.
 tailscale up --auth-key="$key" --hostname=${tailscale_hostname} --ssh
 
-# cloudflared from Cloudflare's signed apt repo (updates with apt upgrade).
+%{ if tunnel_token_param != null ~}
+# cloudflared from Cloudflare's signed apt repo (updates with apt upgrade). Only with a
+# domain; adding one later means running this block by hand (infra/README.md).
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg -o /usr/share/keyrings/cloudflare-main.gpg
 echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" \
   > /etc/apt/sources.list.d/cloudflared.list
@@ -26,3 +28,4 @@ apt-get install -y cloudflared
 token=$(aws ssm get-parameter --region ${region} --name "${tunnel_token_param}" \
   --with-decryption --query Parameter.Value --output text)
 cloudflared service install "$token" # systemd service; routes come from public.tf
+%{ endif ~}
