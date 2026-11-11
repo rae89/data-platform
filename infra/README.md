@@ -1,7 +1,8 @@
 # infra
 
-`terraform apply` here creates one EC2 spot instance (t4g.large, 8 GB, about $24/month)
-running the stack. The AWS security group opens no ports. Ways in:
+`tofu apply` ([OpenTofu](https://opentofu.org), `brew install opentofu`) here creates
+one EC2 spot instance (t4g.large, 8 GB, about $24/month) running the stack. The AWS
+security group opens no ports. Ways in:
 
 - **SSM Session Manager (default, nothing to set up).** A shell, and port forwarding
   to `localhost`, signed in with your AWS credentials. Only for people with AWS access.
@@ -13,7 +14,7 @@ running the stack. The AWS security group opens no ports. Ways in:
 ## Deploy (about 20 minutes)
 
 1. Install the AWS CLI's Session Manager plugin: `brew install --cask session-manager-plugin`.
-2. `terraform -chdir=infra init`, then `terraform -chdir=infra apply`.
+2. `tofu -chdir=infra init`, then `tofu -chdir=infra apply`.
 3. Wait about 3 minutes, then open a shell with the `ssm_shell` output command and run
    `sudo -iu ubuntu` (that user can run Docker).
 4. Clone the repo (it's private: `gh auth login` or a read-only deploy key) and copy
@@ -32,7 +33,7 @@ Boot problems: `/var/log/cloud-init-output.log` on the instance.
 1. Store an auth key in SSM:
    `aws ssm put-parameter --name /data-platform/tailscale-auth-key --type SecureString --value "$(op read op://Personal/data-platform-tailscale/credential)"`
 2. Set `tailscale_auth_key_parameter = "/data-platform/tailscale-auth-key"` in
-   `infra/terraform.tfvars` and run `terraform -chdir=infra apply`.
+   `infra/terraform.tfvars` and run `tofu -chdir=infra apply`.
 3. On an existing instance, cloud-init won't rerun: in an SSM shell, run the Tailscale
    block of `infra/user_data.sh` with `sudo` (replace the template variables).
 4. Add `data-platform-prod:3002` to `HOMEPAGE_ALLOWED_HOSTS` in `.env`, then `just up`.
@@ -61,7 +62,7 @@ Boot problems: `/var/log/cloud-init-output.log` on the instance.
 ## Adding public URLs: deploy (about 20 minutes)
 
 1. Apply, with secrets from 1Password:
-   `CLOUDFLARE_API_TOKEN=$(op read ...) TF_VAR_google_client_secret=$(op read ...) terraform -chdir=infra apply`
+   `CLOUDFLARE_API_TOKEN=$(op read ...) TF_VAR_google_client_secret=$(op read ...) tofu -chdir=infra apply`
 2. On an instance created without a domain, cloud-init didn't install cloudflared. In an
    SSM shell, run the `cloudflared` block at the end of
    `infra/user_data.sh` with `sudo` (replace the template variables). A new instance
@@ -69,13 +70,13 @@ Boot problems: `/var/log/cloud-init-output.log` on the instance.
 3. Add the "Public deploy" lines to `.env` (`HOMEPAGE_ALLOWED_HOSTS`,
    `PORTAL_PUBLIC_URL`), then run `just up`.
 4. Run `PORTAL_PUBLIC_URL=https://{name}.example.com just portal`.
-5. Open `https://portal.example.com` and sign in with Google. `terraform -chdir=infra output urls`
+5. Open `https://portal.example.com` and sign in with Google. `tofu -chdir=infra output urls`
    lists every URL.
 
 ## Adding a service
 
 Add it to `local.services` in `public.tf` (subdomain → port) and set `public:` to the
-same name in `portal/catalog.yaml`, then `terraform apply` and `just portal`.
+same name in `portal/catalog.yaml`, then `tofu apply` and `just portal`.
 
 ## Choices
 
@@ -89,4 +90,4 @@ same name in `portal/catalog.yaml`, then `terraform apply` and `just portal`.
 - **ARM by default.** For x86, set `instance_type = "t3a.large"`; the AMI follows.
 - **Local state** (`infra/terraform.tfstate`, gitignored) holds the tunnel token and the
   Google client secret. Keep it private; move it to an encrypted S3 backend before
-  anyone else runs this. `terraform destroy` deletes the disk and its data.
+  anyone else runs this. `tofu destroy` deletes the disk and its data.

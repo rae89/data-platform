@@ -232,7 +232,7 @@ docs/diagram/                d3 script that renders docs/architecture.svg (`just
 docs/screenshots/            UI screenshots used in this README
 dagster_home/dagster.yaml    Dagster config for `just dev`
 docker/dagster.yaml          Dagster config inside Docker
-infra/                       Terraform: AWS EC2 host for the whole stack (infra/README.md)
+infra/                       OpenTofu: AWS EC2 host for the whole stack (infra/README.md)
 ```
 
 ## SLIs

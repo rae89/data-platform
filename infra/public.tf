@@ -59,7 +59,7 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
 }
 
 # The instance reads the tunnel token at boot, like the Tailscale key. It is also in
-# Terraform state, which is why state must stay private.
+# state, which is why state must stay private.
 resource "aws_ssm_parameter" "tunnel_token" {
   count = local.public ? 1 : 0
   name  = "/data-platform/${var.env}/cloudflare-tunnel-token"

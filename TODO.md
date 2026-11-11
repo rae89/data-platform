@@ -2,7 +2,7 @@
 
 ## Finish the AWS deploy (`infra/`)
 
-`terraform apply` creates the host, but the repo is deployed by hand and an
+`tofu apply` creates the host, but the repo is deployed by hand and an
 interrupted spot instance can leave Dagster in a bad state.
 
 - [ ] Enable `run_monitoring` in `docker/dagster.yaml`, so a run killed by a spot
@@ -11,9 +11,9 @@ interrupted spot instance can leave Dagster in a bad state.
       services on `restart: on-failure:3` to `unless-stopped` if they stay down.
 - [ ] Automate steps 4 and 5 of `infra/README.md` (clone with a read-only deploy key
       from SSM, write `.env` from SSM, `just up`).
-- [ ] Move Terraform state to an S3 backend.
+- [ ] Move OpenTofu state to an S3 backend.
 - [ ] Back up `data/` and the Docker volumes (EBS snapshots via Data Lifecycle Manager).
-- [ ] Check that `terraform destroy` cancels the persistent spot request.
+- [ ] Check that `tofu destroy` cancels the persistent spot request.
 - [ ] Sign people into Grafana and Superset with the Cloudflare Access identity
       (`Cf-Access-Authenticated-User-Email`; Grafana auth proxy) instead of anonymous
       Admin and a shared `admin` login, and set Grafana's `root_url`.
