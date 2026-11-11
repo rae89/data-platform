@@ -1,6 +1,6 @@
 # One EC2 instance runs the whole stack with `docker compose` (DuckDB wants one machine).
-# No inbound ports: the public reaches services through Cloudflare Access (public.tf);
-# admins also have Tailscale, and a shell via SSM Session Manager.
+# No inbound ports. Ways in: SSM Session Manager (shell and port forwarding, always),
+# Tailscale (optional) and public URLs through Cloudflare Access (optional, public.tf).
 
 data "aws_ec2_instance_type" "this" {
   instance_type = var.instance_type
@@ -22,6 +22,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_ssm_parameter" "tailscale_auth_key" {
+  count           = var.tailscale_auth_key_parameter != null ? 1 : 0
   name            = var.tailscale_auth_key_parameter
   with_decryption = false # only checks it exists and gets its ARN; the value stays out of state
 }
@@ -57,15 +58,20 @@ resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+locals {
+  boot_secrets = concat(data.aws_ssm_parameter.tailscale_auth_key[*].arn, aws_ssm_parameter.tunnel_token[*].arn)
+}
+
 resource "aws_iam_role_policy" "boot_secrets" {
-  name = "read-boot-secrets"
-  role = aws_iam_role.this.id
+  count = length(local.boot_secrets) > 0 ? 1 : 0
+  name  = "read-boot-secrets"
+  role  = aws_iam_role.this.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
       Action   = "ssm:GetParameter"
-      Resource = concat([data.aws_ssm_parameter.tailscale_auth_key.arn], aws_ssm_parameter.tunnel_token[*].arn)
+      Resource = local.boot_secrets
     }]
   })
 }
@@ -83,7 +89,7 @@ resource "aws_instance" "this" {
   associate_public_ip_address = true # outbound internet without a NAT gateway; no ports are open
   user_data = templatefile("${path.module}/user_data.sh", {
     region              = var.region
-    tailscale_key_param = var.tailscale_auth_key_parameter
+    tailscale_key_param = var.tailscale_auth_key_parameter # null: no Tailscale
     tailscale_hostname  = "data-platform-${var.env}"
     tunnel_token_param  = one(aws_ssm_parameter.tunnel_token[*].name) # null without a domain
   })

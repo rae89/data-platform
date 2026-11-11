@@ -29,9 +29,9 @@ variable "disk_gb" {
 }
 
 variable "tailscale_auth_key_parameter" {
-  description = "SSM SecureString holding a Tailscale auth key. The instance reads it at boot, so the key never enters Terraform state or user data."
+  description = "SSM SecureString holding a Tailscale auth key, e.g. /data-platform/tailscale-auth-key. The instance reads it at boot, so the key stays out of Terraform state. Null: no Tailscale; use SSM port forwarding."
   type        = string
-  default     = "/data-platform/tailscale-auth-key"
+  default     = null
 }
 
 # Public access (public.tf). Leave `domain` unset for a Tailscale-only deploy; the

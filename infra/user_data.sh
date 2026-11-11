@@ -1,7 +1,7 @@
 #!/bin/bash
-# First boot only (cloud-init). Installs Docker, just and Tailscale and joins the
-# tailnet; with a domain, also installs cloudflared and starts the Cloudflare tunnel. Deploying the repo is a manual
-# step for now (infra/README.md).
+# First boot only (cloud-init). Installs Docker and just; optionally joins Tailscale
+# and starts the Cloudflare tunnel. Deploying the repo is a manual step for now
+# (infra/README.md).
 set -euxo pipefail
 
 apt-get update
@@ -10,12 +10,14 @@ systemctl enable --now docker
 usermod -aG docker ubuntu
 
 snap install aws-cli --classic
-curl -fsSL https://tailscale.com/install.sh | sh
 
+%{ if tailscale_key_param != null ~}
+curl -fsSL https://tailscale.com/install.sh | sh
 key=$(aws ssm get-parameter --region ${region} --name "${tailscale_key_param}" \
   --with-decryption --query Parameter.Value --output text)
 # --ssh: Tailscale SSH, so no SSH port or key pair is needed.
 tailscale up --auth-key="$key" --hostname=${tailscale_hostname} --ssh
+%{ endif ~}
 
 %{ if tunnel_token_param != null ~}
 # cloudflared from Cloudflare's signed apt repo (updates with apt upgrade). Only with a

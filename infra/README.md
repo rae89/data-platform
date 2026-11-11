@@ -1,24 +1,41 @@
 # infra
 
 `terraform apply` here creates one EC2 spot instance (t4g.large, 8 GB, about $24/month)
-running the stack. The AWS security group opens no ports. Two ways in:
+running the stack. The AWS security group opens no ports. Ways in:
 
-- **Tailscale only (default, no domain).** People sign in to your tailnet with Google
-  and open `http://data-platform-prod:<port>`. Each person installs the Tailscale app;
-  invite them from the Tailscale admin console.
-- **Public URLs (set `domain`).** Every service at `https://<name>.<domain>` behind
-  Google sign-in (Cloudflare Access, free up to 50 users), no app needed. cloudflared on
-  the instance dials out to Cloudflare. Needs a new domain (step 1 below).
+- **SSM Session Manager (default, nothing to set up).** A shell, and port forwarding
+  to `localhost`, signed in with your AWS credentials. Only for people with AWS access.
+- **Tailscale (optional, set `tailscale_auth_key_parameter`).** Anyone you invite signs
+  in to your tailnet with Google and opens `http://data-platform-prod:<port>`.
+- **Public URLs (optional, set `domain`).** Every service at `https://<name>.<domain>`
+  behind Google sign-in (Cloudflare Access), in any browser. Needs a new domain.
 
-## Tailscale-only deploy (about 20 minutes)
+## Deploy (about 20 minutes)
 
-1. Store a Tailscale auth key in SSM:
-   `aws ssm put-parameter --name /data-platform/tailscale-auth-key --type SecureString --value "$(op read op://Personal/data-platform-tailscale/credential)"`
+1. Install the AWS CLI's Session Manager plugin: `brew install --cask session-manager-plugin`.
 2. `terraform -chdir=infra init`, then `terraform -chdir=infra apply`.
-3. Wait about 3 minutes, then `ssh ubuntu@data-platform-prod` (Tailscale SSH).
-4. Clone the repo, copy `.env.example` to `.env`, fill in the secrets and set
-   `HOMEPAGE_ALLOWED_HOSTS=localhost:3002,data-platform-prod:3002`.
-5. Run `PLATFORM_ENV=prod just up`. Open the portal at http://data-platform-prod:3002.
+3. Wait about 3 minutes, then open a shell with the `ssm_shell` output command and run
+   `sudo -iu ubuntu` (that user can run Docker).
+4. Clone the repo (it's private: `gh auth login` or a read-only deploy key) and copy
+   `.env.example` to `.env`, filling in the secrets.
+5. Run `PLATFORM_ENV=prod just up`.
+
+To open a service, run the `port_forward` output command on your laptop and keep it
+running: http://localhost:3002 is the portal. For Dagster, change both port numbers to
+3000; Grafana 3001, Superset 8088. Portal links to other services work for the ports
+you forward.
+
+Boot problems: `/var/log/cloud-init-output.log` on the instance.
+
+## Adding Tailscale
+
+1. Store an auth key in SSM:
+   `aws ssm put-parameter --name /data-platform/tailscale-auth-key --type SecureString --value "$(op read op://Personal/data-platform-tailscale/credential)"`
+2. Set `tailscale_auth_key_parameter = "/data-platform/tailscale-auth-key"` in
+   `infra/terraform.tfvars` and run `terraform -chdir=infra apply`.
+3. On an existing instance, cloud-init won't rerun: in an SSM shell, run the Tailscale
+   block of `infra/user_data.sh` with `sudo` (replace the template variables).
+4. Add `data-platform-prod:3002` to `HOMEPAGE_ALLOWED_HOSTS` in `.env`, then `just up`.
 
 ## Adding public URLs: one-time setup (about 30 minutes)
 
@@ -45,8 +62,8 @@ running the stack. The AWS security group opens no ports. Two ways in:
 
 1. Apply, with secrets from 1Password:
    `CLOUDFLARE_API_TOKEN=$(op read ...) TF_VAR_google_client_secret=$(op read ...) terraform -chdir=infra apply`
-2. On an instance created without a domain, cloud-init didn't install cloudflared. Over
-   `ssh ubuntu@data-platform-prod`, run the `cloudflared` block at the end of
+2. On an instance created without a domain, cloud-init didn't install cloudflared. In an
+   SSM shell, run the `cloudflared` block at the end of
    `infra/user_data.sh` with `sudo` (replace the template variables). A new instance
    does this at boot.
 3. Add the "Public deploy" lines to `.env` (`HOMEPAGE_ALLOWED_HOSTS`,
@@ -54,9 +71,6 @@ running the stack. The AWS security group opens no ports. Two ways in:
 4. Run `PORTAL_PUBLIC_URL=https://{name}.example.com just portal`.
 5. Open `https://portal.example.com` and sign in with Google. `terraform -chdir=infra output urls`
    lists every URL.
-
-No shell over Tailscale? Run the `ssm_shell` output command and check
-`/var/log/cloud-init-output.log`.
 
 ## Adding a service
 
