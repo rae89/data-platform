@@ -61,7 +61,7 @@ services:
     environment:
       VICTORIA_METRICS_URL: http://victoriametrics:8428
       VICTORIA_LOGS_URL: http://victorialogs:9428
-      PLATFORM_ENV: local
+      PLATFORM_ENV: ${PLATFORM_ENV:-local}
     ports: ["3000:3000"]
     volumes:
       - ./data:/data                          # DuckDB warehouse, shared with your host

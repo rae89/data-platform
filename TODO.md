@@ -1,5 +1,20 @@
 # TODO
 
+## Finish the AWS deploy (`infra/`)
+
+`terraform apply` creates the host, but the repo is deployed by hand and an
+interrupted spot instance can leave Dagster in a bad state.
+
+- [ ] Enable `run_monitoring` in `docker/dagster.yaml`, so a run killed by a spot
+      interruption is marked failed instead of staying "STARTED".
+- [ ] Check what comes back after `aws ec2 stop-instances` / `start-instances`; switch
+      services on `restart: on-failure:3` to `unless-stopped` if they stay down.
+- [ ] Automate steps 4 and 5 of `infra/README.md` (clone with a read-only deploy key
+      from SSM, write `.env` from SSM, `just up`).
+- [ ] Move Terraform state to an S3 backend.
+- [ ] Back up `data/` and the Docker volumes (EBS snapshots via Data Lifecycle Manager).
+- [ ] Check that `terraform destroy` cancels the persistent spot request.
+
 ## Send alerts somewhere
 
 vmalert evaluates the SLO alerts, but `-notifier.blackhole` discards them, so a
