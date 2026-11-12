@@ -221,3 +221,9 @@ portal/homepage/docker.yaml
 portal/homepage/kubernetes.yaml
 portal/homepage/proxmox.yaml
 portal/homepage/custom.js
+
+# OpenTofu (infra/): local state and provider cache. Commit .terraform.lock.hcl.
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/*.tfvars
