@@ -61,8 +61,9 @@ Boot problems: `/var/log/cloud-init-output.log` on the instance.
 
 ## Adding public URLs: deploy (about 20 minutes)
 
-1. Apply, with secrets from 1Password:
-   `CLOUDFLARE_API_TOKEN=$(op read ...) TF_VAR_google_client_secret=$(op read ...) tofu -chdir=infra apply`
+1. Apply, with the Cloudflare token and Google client secret from 1Password (items
+   `data-platform-cloudflare` and `data-platform-google-oauth`, see `infra/.env.op`):
+   `op run --env-file infra/.env.op -- tofu -chdir=infra apply`
 2. On an instance created without a domain, cloud-init didn't install cloudflared. In an
    SSM shell, run the `cloudflared` block at the end of
    `infra/user_data.sh` with `sudo` (replace the template variables). A new instance
