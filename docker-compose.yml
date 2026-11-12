@@ -57,6 +57,9 @@ services:
     restart: unless-stopped
 
   dagster:
+    # CI pushes this image on main (.github/workflows/images.yml); the server pulls it
+    # (`just update`), locally `just up` builds it from source.
+    image: ghcr.io/rae89/data-platform-dagster:main
     build: .
     environment:
       VICTORIA_METRICS_URL: http://victoriametrics:8428
@@ -72,6 +75,7 @@ services:
   # BI dashboards on the dbt marts (superset/). Reads data/bi.duckdb, a snapshot the
   # bi/marts_snapshot asset writes after each run, never the warehouse itself.
   superset:
+    image: ghcr.io/rae89/data-platform-superset:main  # built by CI, like dagster
     build: ./superset
     environment:
       # Secrets: 1Password via `just up` (.env.op), or .env. Superset exits without them.

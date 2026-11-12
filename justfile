@@ -41,6 +41,19 @@ test *args:
 cov *args:
     uv run pytest packages/dagster-victoria-sli/tests tests --cov {{ args }}
 
+# Every check CI runs (.github/workflows/ci.yml); needs uv and OpenTofu
+ci: defs-state check cov
+    {{ just_executable() }} --fmt --check
+    tofu -chdir=infra fmt -check
+    tofu -chdir=infra init -backend=false -input=false > /dev/null
+    tofu -chdir=infra validate
+
+# Server: switch to the images CI built for main (no local build), then restart what changed
+update:
+    git pull --ff-only
+    docker compose pull dagster superset
+    docker compose up -d
+
 # Rebuild the dbt component state (manifest) after changing dbt models
 defs-state:
     uv run dg utils refresh-defs-state

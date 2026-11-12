@@ -24,6 +24,8 @@ just check           # validate definitions and component YAML (uv run dg check 
 just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
 just cov             # tests with coverage, fails below 99%
+just ci              # every check CI runs (defs, tests, just and OpenTofu formatting)
+just update          # on the server: pull CI-built images for main and restart
 just dlt-dashboard   # dlt pipeline dashboard (schema, state, loads), :2718
 just portal          # render the portal landing page from portal/catalog.yaml
 just diagram         # re-render docs diagrams (docs/diagram/*.mjs → docs/*.svg)
@@ -69,6 +71,9 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - `.claude/settings.json`: Claude Code plugins for this repo (ponytail,
   i-have-adhd). Claude Code offers to install them when you trust the folder.
 - `.github/pull_request_template.md`: PR description layout.
+- `.github/workflows/`: `ci.yml` runs `just ci` on PRs and main; `images.yml` builds the
+  Dagster and Superset images (arm64) and pushes them to `ghcr.io` on main, so the
+  server pulls instead of building.
 
 ## Rules and gotchas
 
@@ -154,6 +159,6 @@ When creating a PR (including with `gh pr create --body`), read
 ## Before finishing a change
 
 - Use `just` recipes and `uv run dg ...` rather than calling `dagster` directly.
-- Run `just check` and `just cov`, and report any failures. Keep coverage at 99% or
-  more: new code comes with tests.
+- Run `just ci` (or at least `just check` and `just cov`), and report any failures.
+  Keep coverage at 99% or more: new code comes with tests.
 - Update `README.md`, this file and `TODO.md` if the change affects them.
