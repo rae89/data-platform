@@ -111,3 +111,17 @@ def test_unknown_feed_type_fails_loudly():
     with pytest.raises(ValueError, match="Unknown feed source type: rss2"):
         render_homepage.feed_widget({"type": "rss2"})
 
+
+
+def test_public_url_keeps_path_and_query_and_skips_local_only_entries():
+    entries = {
+        "components": [
+            {"name": "VM", "group": "G", "description": "", "url": "http://localhost:8428/vmui?x=1", "public": "victoriametrics"},
+            {"name": "dlt", "group": "G", "description": "", "url": "http://localhost:2718"},
+        ]
+    }
+    rendered = yaml.safe_load(render_homepage.render(entries, "https://dp-{name}.example.com"))
+    assert [s[n]["href"] for s in rendered[0]["G"] for n in s] == [
+        "https://dp-victoriametrics.example.com/vmui?x=1",
+        "http://localhost:2718",
+    ]

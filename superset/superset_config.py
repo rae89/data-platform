@@ -3,3 +3,7 @@
 # Metadata (users, charts, dashboards) lives in SQLite under /app/superset_home.
 
 ROW_LIMIT = 10_000
+
+# Trust X-Forwarded-Proto/Host from cloudflared (infra/public.tf), so redirects stay on
+# https and the public hostname. Superset is only reachable through it or localhost.
+ENABLE_PROXY_FIX = True

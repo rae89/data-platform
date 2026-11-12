@@ -1,6 +1,6 @@
 # One EC2 instance runs the whole stack with `docker compose` (DuckDB wants one machine).
 # No inbound ports. Ways in: SSM Session Manager (shell and port forwarding, always),
-# Tailscale (optional).
+# Tailscale (optional) and public URLs through Cloudflare Access (optional, public.tf).
 
 data "aws_ec2_instance_type" "this" {
   instance_type = var.instance_type
@@ -59,7 +59,7 @@ resource "aws_iam_role_policy_attachment" "ssm" {
 }
 
 locals {
-  boot_secrets = data.aws_ssm_parameter.tailscale_auth_key[*].arn
+  boot_secrets = concat(data.aws_ssm_parameter.tailscale_auth_key[*].arn, aws_ssm_parameter.tunnel_token[*].arn)
 }
 
 resource "aws_iam_role_policy" "boot_secrets" {
@@ -91,6 +91,7 @@ resource "aws_instance" "this" {
     region              = var.region
     tailscale_key_param = var.tailscale_auth_key_parameter # null: no Tailscale
     tailscale_hostname  = "data-platform-${var.env}"
+    tunnel_token_param  = one(aws_ssm_parameter.tunnel_token[*].name) # null without a domain
   })
 
   dynamic "instance_market_options" {

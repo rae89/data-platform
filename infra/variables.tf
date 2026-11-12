@@ -33,3 +33,43 @@ variable "tailscale_auth_key_parameter" {
   type        = string
   default     = null
 }
+
+# Public access (public.tf). Leave `domain` unset for a Tailscale-only deploy; the
+# rest is then unused. With a domain, set CLOUDFLARE_API_TOKEN in the environment.
+
+variable "domain" {
+  description = "Cloudflare zone (e.g. example.com). Services get <prefix><name>.<domain>. Null: no public access."
+  type        = string
+  default     = null
+}
+
+variable "hostname_prefix" {
+  description = "Prefix for every hostname, e.g. \"dp-\" gives dp-dagster.example.com."
+  type        = string
+  default     = ""
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account that owns the zone and Zero Trust."
+  type        = string
+  default     = null
+}
+
+variable "allowed_emails" {
+  description = "Google accounts allowed to sign in."
+  type        = list(string)
+  default     = []
+}
+
+variable "google_client_id" {
+  description = "OAuth client ID of a Google Cloud \"Web application\" client."
+  type        = string
+  default     = null
+}
+
+variable "google_client_secret" {
+  description = "Its secret. Pass with TF_VAR_google_client_secret (e.g. from 1Password via op run)."
+  type        = string
+  default     = null
+  sensitive   = true
+}
