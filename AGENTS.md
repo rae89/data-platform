@@ -61,7 +61,7 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - `docs/diagram/`: d3 scripts for docs diagrams. `architecture.mjs` draws the README
   diagram; if you add or remove a component, update it and run `just diagram`.
 - `infra/`: OpenTofu (`tofu`, not `terraform`) for AWS hosting: one EC2 spot instance
-  with no inbound ports, reached through SSM Session Manager; optionally over Tailscale.
+  with no inbound ports, reached through SSM Session Manager.
   See `infra/README.md`.
 - `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`just dev`): instance
   config. Keep both in sync.

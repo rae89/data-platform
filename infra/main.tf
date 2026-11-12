@@ -1,6 +1,5 @@
 # One EC2 instance runs the whole stack with `docker compose` (DuckDB wants one machine).
-# No inbound ports. Ways in: SSM Session Manager (shell and port forwarding, always),
-# Tailscale (optional).
+# No inbound ports. Way in: SSM Session Manager (shell and port forwarding).
 
 data "aws_ec2_instance_type" "this" {
   instance_type = var.instance_type
@@ -21,12 +20,8 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_ssm_parameter" "tailscale_auth_key" {
-  count           = var.tailscale_auth_key_parameter != null ? 1 : 0
-  name            = var.tailscale_auth_key_parameter
-  with_decryption = false # only checks it exists and gets its ARN; the value stays out of state
-}
-
+# Its description still mentions Tailscale: changing a security group's description
+# replaces the group, so the old wording stays.
 resource "aws_security_group" "this" {
   name        = "data-platform-${var.env}"
   description = "data-platform: outbound only; services are reached over Tailscale"
@@ -52,28 +47,10 @@ resource "aws_iam_role" "this" {
   })
 }
 
-# Session Manager shell: the fallback when Tailscale isn't up (e.g. a failed boot script).
+# Session Manager: a shell and port forwarding, signed in with AWS credentials.
 resource "aws_iam_role_policy_attachment" "ssm" {
   role       = aws_iam_role.this.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-locals {
-  boot_secrets = data.aws_ssm_parameter.tailscale_auth_key[*].arn
-}
-
-resource "aws_iam_role_policy" "boot_secrets" {
-  count = length(local.boot_secrets) > 0 ? 1 : 0
-  name  = "read-boot-secrets"
-  role  = aws_iam_role.this.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = "ssm:GetParameter"
-      Resource = local.boot_secrets
-    }]
-  })
 }
 
 resource "aws_iam_instance_profile" "this" {
@@ -88,9 +65,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.this.name
   associate_public_ip_address = true # outbound internet without a NAT gateway; no ports are open
   user_data = templatefile("${path.module}/user_data.sh", {
-    region              = var.region
-    tailscale_key_param = var.tailscale_auth_key_parameter # null: no Tailscale
-    tailscale_hostname  = "data-platform-${var.env}"
+    region = var.region
   })
 
   dynamic "instance_market_options" {

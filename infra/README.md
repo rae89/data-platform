@@ -6,8 +6,6 @@ security group opens no ports. Ways in:
 
 - **SSM Session Manager (default, nothing to set up).** A shell, and port forwarding
   to `localhost`, signed in with your AWS credentials. Only for people with AWS access.
-- **Tailscale (optional, set `tailscale_auth_key_parameter`).** Anyone you invite signs
-  in to your tailnet with Google and opens `http://data-platform-prod:<port>`.
 
 ## Deploy (about 20 minutes)
 
@@ -25,16 +23,6 @@ running: http://localhost:3002 is the portal. For Dagster, change both port numb
 you forward.
 
 Boot problems: `/var/log/cloud-init-output.log` on the instance.
-
-## Adding Tailscale
-
-1. Store an auth key in SSM:
-   `aws ssm put-parameter --name /data-platform/tailscale-auth-key --type SecureString --value "$(op read op://Personal/data-platform-tailscale/credential)"`
-2. Set `tailscale_auth_key_parameter = "/data-platform/tailscale-auth-key"` in
-   `infra/terraform.tfvars` and run `tofu -chdir=infra apply`.
-3. On an existing instance, cloud-init won't rerun: in an SSM shell, run the Tailscale
-   block of `infra/user_data.sh` with `sudo` (replace the template variables).
-4. Add `data-platform-prod:3002` to `HOMEPAGE_ALLOWED_HOSTS` in `.env`, then `just up`.
 
 ## Choices
 

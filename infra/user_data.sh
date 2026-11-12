@@ -1,5 +1,5 @@
 #!/bin/bash
-# First boot only (cloud-init). Installs Docker and just; optionally joins Tailscale.
+# First boot only (cloud-init). Installs Docker and just.
 # Deploying the repo is a manual step for now (infra/README.md).
 set -euxo pipefail
 
@@ -18,14 +18,3 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
 snap install aws-cli --classic
 
-%{ if tailscale_key_param != null ~}
-curl -fsSL https://tailscale.com/install.sh | sh
-# No tracing while a secret is in play: this output also goes to the EC2 console log.
-set +x
-key=$(aws ssm get-parameter --region ${region} --name "${tailscale_key_param}" \
-  --with-decryption --query Parameter.Value --output text)
-# --ssh: Tailscale SSH, so no SSH port or key pair is needed.
-tailscale up --auth-key="$key" --hostname=${tailscale_hostname} --ssh
-unset key
-set -x
-%{ endif ~}
