@@ -49,8 +49,8 @@ the VictoriaMetrics delete API. About 6 to 8 hours; needs the domain (`infra/REA
       users on first visit; `SUPERSET_ADMIN_EMAILS` get Admin, everyone else Gamma.
 - [ ] Superset: let Gamma users see the dashboards (dataset access on the role), still
       without SQL Lab (DuckDB can read any file in the container).
-- [ ] Keep a local admin login as a backup for SSM port forwarding and Tailscale,
-      which bypass Cloudflare and carry no token.
+- [ ] Keep a local admin login as a backup for SSM port forwarding,
+      which bypasses Cloudflare and carry no token.
 
 ## Send alerts somewhere
 

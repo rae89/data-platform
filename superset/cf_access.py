@@ -5,7 +5,7 @@ every request it lets through. The middleware checks that token against the team
 public keys and passes its email to Superset as REMOTE_USER, which the AUTH_REMOTE_USER
 login in superset_config.py signs in. Only the signed token counts: the plain
 `Cf-Access-Authenticated-User-Email` header can be faked by anyone who reaches Superset
-without going through Cloudflare (SSM port forwarding, Tailscale).
+without going through Cloudflare (SSM port forwarding).
 """
 
 import jwt
