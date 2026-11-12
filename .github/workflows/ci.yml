@@ -1,0 +1,29 @@
+# Every check `just ci` runs locally, on each PR and on main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6 # Python comes from .python-version
+        with:
+          enable-cache: true
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.11.3
+          tofu_wrapper: false
+      - run: uvx --from rust-just just ci

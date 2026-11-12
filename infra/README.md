@@ -17,7 +17,11 @@ security group opens no ports. Ways in:
    `sudo -iu ubuntu` (that user can run Docker).
 4. Clone the repo, `git clone https://github.com/rae89/data-platform.git`, and copy
    `.env.example` to `.env`, filling in the secrets and `PLATFORM_ENV=prod`.
-5. Run `just up`. The first build takes about 10 to 15 minutes.
+5. Run `just update`: it pulls the images CI built for `main` (`ghcr.io/rae89/data-platform-*`)
+   and starts everything, without building on the server.
+
+To deploy a later change: merge it to `main`, wait for the "Images" workflow, then run
+`just update` on the server.
 
 To open a service, run the `port_forward` output command on your laptop and keep it
 running: http://localhost:3002 is the portal. For Dagster, change both port numbers to
