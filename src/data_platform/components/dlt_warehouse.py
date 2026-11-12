@@ -90,7 +90,11 @@ class DltWarehouseLoads(dagster_dlt.DltLoadCollectionComponent):
         )
 
     def execute(self, context: dg.AssetExecutionContext, dlt_pipeline_resource):
-        events = dlt_pipeline_resource.run(context=context)
+        # JSON-lines load files, not dlt's default for DuckDB (one big INSERT ... VALUES
+        # statement per table): DuckDB took 6.4 GB to parse that for the 80k-row PortWatch
+        # backfill, outside its memory_limit, and the OS killed the run on the 8 GB server.
+        # jsonl peaked at 0.4 GB for the same rows.
+        events = dlt_pipeline_resource.run(context=context, loader_file_format="jsonl")
         # dagster-dlt's .fetch_row_count() raises when an incremental resource loaded no
         # new rows (no load job), failing the run. Count the table directly instead; one
         # table per resource makes its name the resource name.

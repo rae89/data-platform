@@ -70,6 +70,26 @@ def test_new_source_scaffolds_and_loads_into_duckdb(tmp_path):
     assert "items" in tables and "items__tags" not in tables  # one table per resource
 
 
+def test_loads_go_through_jsonl_files(tmp_path):
+    # dlt's default for DuckDB is one INSERT ... VALUES statement per table, which took
+    # gigabytes to parse on a full backfill and got the run killed for running out of memory.
+    db = tmp_path / "warehouse.duckdb"
+    with create_defs_folder_sandbox(project_name="jsonl_project") as sandbox:
+        defs_path = sandbox.scaffold_component(component_cls=DltWarehouseLoads)
+        (defs_path / "loads.py").write_text(LOCAL_SOURCE.format(db=db, state=tmp_path / ".dlt"))
+        with sandbox.load_component_and_build_defs(defs_path=defs_path) as (_, defs):
+            with dg.instance_for_test() as instance:
+                result = dg.materialize(
+                    list(defs.assets), instance=instance, resources=defs.resources or {}
+                )
+    assert result.success
+    loaded = [p.name for p in (tmp_path / ".dlt").rglob("items.*") if "completed_jobs" in str(p)]
+    # The data arrives as jsonl; the .sql job is dlt's merge step.
+    assert any(".jsonl" in n for n in loaded) and not any("insert_values" in n for n in loaded), loaded
+    with duckdb.connect(str(db), read_only=True) as conn:
+        assert conn.execute("select count(*) from demo.items").fetchone()[0] == 2
+
+
 def test_warehouse_pipeline_targets_the_warehouse(tmp_path, monkeypatch):
     from data_platform.components import dlt_warehouse
 
