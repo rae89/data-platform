@@ -28,14 +28,8 @@ variable "disk_gb" {
   default     = 40
 }
 
-variable "tailscale_auth_key_parameter" {
-  description = "SSM SecureString holding a Tailscale auth key, e.g. /data-platform/tailscale-auth-key. The instance reads it at boot, so the key stays out of state. Null: no Tailscale; use SSM port forwarding."
-  type        = string
-  default     = null
-}
-
-# Public access (public.tf). Leave `domain` unset for a Tailscale-only deploy; the
-# rest is then unused. With a domain, set CLOUDFLARE_API_TOKEN in the environment.
+# Public access (public.tf). Leave `domain` unset for SSM access only; the rest is
+# then unused. With a domain, set CLOUDFLARE_API_TOKEN in the environment.
 
 variable "domain" {
   description = "Cloudflare zone (e.g. example.com). Services get <prefix><name>.<domain>. Null: no public access."

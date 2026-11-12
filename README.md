@@ -86,7 +86,7 @@ The portal also shows update feeds, defined under `feeds:` in the catalog:
   versions in `docker-compose.yml` and `pyproject.toml` to see when to upgrade.
 
 To host it on AWS (one EC2 spot instance, about $24/month), reached through AWS Session
-Manager, Tailscale or `https://<name>.<domain>` behind Google sign-in, see
+Manager or at `https://<name>.<domain>` behind Google sign-in, see
 `infra/README.md`.
 
 Homepage has one page, not a page per service. For more views, put groups on tabs
