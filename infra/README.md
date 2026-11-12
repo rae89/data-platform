@@ -17,9 +17,9 @@ security group opens no ports. Ways in:
 2. `tofu -chdir=infra init`, then `tofu -chdir=infra apply`.
 3. Wait about 3 minutes, then open a shell with the `ssm_shell` output command and run
    `sudo -iu ubuntu` (that user can run Docker).
-4. Clone the repo (it's private: `gh auth login` or a read-only deploy key) and copy
-   `.env.example` to `.env`, filling in the secrets.
-5. Run `PLATFORM_ENV=prod just up`.
+4. Clone the repo, `git clone https://github.com/rae89/data-platform.git`, and copy
+   `.env.example` to `.env`, filling in the secrets and `PLATFORM_ENV=prod`.
+5. Run `just up`. The first build takes about 10 to 15 minutes.
 
 To open a service, run the `port_forward` output command on your laptop and keep it
 running: http://localhost:3002 is the portal. For Dagster, change both port numbers to
