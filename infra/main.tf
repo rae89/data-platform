@@ -1,5 +1,6 @@
 # One EC2 instance runs the whole stack with `docker compose` (DuckDB wants one machine).
-# No inbound ports. Way in: SSM Session Manager (shell and port forwarding).
+# No inbound ports. Ways in: SSM Session Manager (shell and port forwarding, always)
+# and public URLs through Cloudflare Access (optional, public.tf).
 
 data "aws_ec2_instance_type" "this" {
   instance_type = var.instance_type
@@ -53,6 +54,20 @@ resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy" "boot_secrets" {
+  count = local.public ? 1 : 0 # reads the tunnel token at boot (public.tf)
+  name  = "read-boot-secrets"
+  role  = aws_iam_role.this.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "ssm:GetParameter"
+      Resource = aws_ssm_parameter.tunnel_token[*].arn
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "this" {
   name = "data-platform-${var.env}"
   role = aws_iam_role.this.name
@@ -65,7 +80,8 @@ resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.this.name
   associate_public_ip_address = true # outbound internet without a NAT gateway; no ports are open
   user_data = templatefile("${path.module}/user_data.sh", {
-    region = var.region
+    region             = var.region
+    tunnel_token_param = one(aws_ssm_parameter.tunnel_token[*].name) # null without a domain
   })
 
   dynamic "instance_market_options" {

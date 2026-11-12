@@ -1,6 +1,8 @@
 """Renders portal/catalog.yaml into Homepage's services.yaml. Run it with `just portal`."""
 
+import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -40,18 +42,23 @@ def feed_widget(source: dict) -> dict:
     raise ValueError(f"Unknown feed source type: {source['type']}")
 
 
-def base_service(entry: dict) -> dict:
+def base_service(entry: dict, public_url: str | None = None) -> dict:
     """Fields every catalog entry (component or feed) maps the same way."""
-    service = {"href": entry["url"], "description": entry["description"]}
+    href = entry["url"]
+    if public_url and "public" in entry:
+        # Public deploy (infra/public.tf): same path on the service's public hostname.
+        parts = urlsplit(href)
+        href = public_url.format(name=entry["public"]) + parts.path + (f"?{parts.query}" if parts.query else "")
+    service = {"href": href, "description": entry["description"]}
     if "icon" in entry:
         service["icon"] = entry["icon"]
     return service
 
 
-def render(catalog: dict) -> str:
+def render(catalog: dict, public_url: str | None = None) -> str:
     groups: dict[str, list] = {}  # keeps catalog order
     for c in catalog["components"]:
-        service = base_service(c)
+        service = base_service(c, public_url)
         if "health" in c:
             service["siteMonitor"] = c["health"]
         service.update(c.get("homepage", {}))
@@ -64,5 +71,6 @@ def render(catalog: dict) -> str:
 
 
 if __name__ == "__main__":
-    SERVICES.write_text(render(yaml.safe_load(CATALOG.read_text())))
+    # e.g. https://{name}.example.com: links point at the public hostnames, not localhost.
+    SERVICES.write_text(render(yaml.safe_load(CATALOG.read_text()), os.environ.get("PORTAL_PUBLIC_URL")))
     print(f"wrote {SERVICES.relative_to(PORTAL.parent)}")

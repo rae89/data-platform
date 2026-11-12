@@ -61,7 +61,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - `docs/diagram/`: d3 scripts for docs diagrams. `architecture.mjs` draws the README
   diagram; if you add or remove a component, update it and run `just diagram`.
 - `infra/`: OpenTofu (`tofu`, not `terraform`) for AWS hosting: one EC2 spot instance
-  with no inbound ports, reached through SSM Session Manager.
+  with no inbound ports, reached through SSM Session Manager and, with `domain` set,
+  through Cloudflare Access with Google sign-in (`public.tf`).
   See `infra/README.md`.
 - `docker/dagster.yaml` (Docker) and `dagster_home/dagster.yaml` (`just dev`): instance
   config. Keep both in sync.
@@ -99,7 +100,10 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - Configure endpoints with env vars (`VICTORIA_METRICS_URL`, `VICTORIA_LOGS_URL`)
   and default to localhost.
 - If you add, remove or move a service, update `portal/catalog.yaml` and run
-  `just portal`, in addition to the architecture diagram.
+  `just portal`, in addition to the architecture diagram. If it has a web UI, add it
+  to `local.services` in `infra/public.tf` and set `public:` in the catalog.
+- **Public access goes through Cloudflare Access only.** Never open inbound ports in
+  `infra/main.tf`: most services have no login of their own.
 - If you rename or add a metric, update `vmalert/rules.yml`, the Grafana dashboards,
   the portal widgets in `portal/catalog.yaml` and the SLI table in `README.md`
   together.
