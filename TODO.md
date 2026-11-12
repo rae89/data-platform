@@ -45,10 +45,10 @@ the VictoriaMetrics delete API. About 6 to 8 hours; needs the domain (`infra/REA
       `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`; admin emails get
       Admin, everyone else Viewer; turn off the login form and anonymous access; set
       `root_url`. Only via env on the server, so `just up` locally stays as it is.
-- [ ] Superset: check the same signed token in `superset_config.py` (not the plain
-      email header, which anyone reaching the server directly can fake), create users
-      on first visit; admin emails get Admin, everyone else a dashboards-only role with
-      no SQL Lab (DuckDB can read any file in the container). Add tests.
+- [x] Superset: sign in with the signed Access token (`superset/cf_access.py`), create
+      users on first visit; `SUPERSET_ADMIN_EMAILS` get Admin, everyone else Gamma.
+- [ ] Superset: let Gamma users see the dashboards (dataset access on the role), still
+      without SQL Lab (DuckDB can read any file in the container).
 - [ ] Keep a local admin login as a backup for SSM port forwarding and Tailscale,
       which bypass Cloudflare and carry no token.
 

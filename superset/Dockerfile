@@ -8,6 +8,8 @@ USER root
 RUN . /app/.venv/bin/activate && uv pip install duckdb==2.0.0 duckdb-engine==0.17.0
 
 COPY --chown=superset superset_config.py /app/superset_config.py
+# On PYTHONPATH (/app/pythonpath) so superset_config.py can import it.
+COPY --chown=superset cf_access.py /app/pythonpath/cf_access.py
 COPY --chown=superset assets /app/superset_assets
 COPY --chown=superset --chmod=755 entrypoint.sh /app/entrypoint.sh
 ENV SUPERSET_CONFIG_PATH=/app/superset_config.py

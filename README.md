@@ -115,6 +115,11 @@ a `password` field and a `secret_key` field (`openssl rand -base64 42`); `just u
 injects them (see `.env.op`). Without 1Password, set them in `.env`. If they're
 missing, Superset exits with a message and everything else runs.
 
+Behind Cloudflare Access (`infra/README.md`), Superset skips its login page: it signs
+people in with Access's signed token (`superset/cf_access.py`). Emails in
+`SUPERSET_ADMIN_EMAILS` get Admin, others the read-only Gamma role. Locally, without
+`CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD`, the `admin` password login stays.
+
 **Port activity (LA-Long Beach)**
 (http://localhost:8088/superset/dashboard/port-activity/): IMF PortWatch data from
 `marts.port_daily_activity`. Container ship calls and container import/export volumes
