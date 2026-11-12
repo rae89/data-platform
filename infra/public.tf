@@ -58,7 +58,7 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "this" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.this[0].id
 }
 
-# The instance reads the tunnel token at boot, like the Tailscale key. It is also in
+# The instance reads the tunnel token from SSM at boot. It is also in
 # state, which is why state must stay private.
 resource "aws_ssm_parameter" "tunnel_token" {
   count = local.public ? 1 : 0
