@@ -77,6 +77,11 @@ services:
       # Secrets: 1Password via `just up` (.env.op), or .env. Superset exits without them.
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-}
       SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-}
+      # Public server only: sign in with Cloudflare Access instead of the login page
+      # (`tofu -chdir=infra output cf_access`). Unset locally: password login.
+      CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:-}
+      CF_ACCESS_AUD: ${CF_ACCESS_AUD:-}
+      SUPERSET_ADMIN_EMAILS: ${SUPERSET_ADMIN_EMAILS:-}
     ports: ["8088:8088"]
     volumes:
       - ./data:/data:ro

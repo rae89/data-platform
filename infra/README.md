@@ -57,7 +57,9 @@ Boot problems: `/var/log/cloud-init-output.log` on the instance.
    `infra/user_data.sh` with `sudo` (replace the template variables). A new instance
    does this at boot.
 3. Add the "Public deploy" lines to `.env` (`HOMEPAGE_ALLOWED_HOSTS`,
-   `PORTAL_PUBLIC_URL`), then run `just up`.
+   `PORTAL_PUBLIC_URL`, and for Superset sign-in through Access `CF_ACCESS_TEAM_DOMAIN`,
+   `CF_ACCESS_AUD` from `tofu -chdir=infra output cf_access`, `SUPERSET_ADMIN_EMAILS`),
+   then run `just up`. Superset then has no password login: reach it through Access.
 4. Run `PORTAL_PUBLIC_URL=https://{name}.example.com just portal`.
 5. Open `https://portal.example.com` and sign in with Google. `tofu -chdir=infra output urls`
    lists every URL.

@@ -29,6 +29,29 @@ webhooks. Needs the S3 backend above. About 1 to 2 hours.
 - [ ] Put `apply` behind a GitHub Environment with a required reviewer.
 - [ ] Document the flow in `infra/README.md`.
 
+## Demo access: self-approved read-only visitors, Cloudflare Access as the only login
+
+To show the platform to customers or hiring managers without handing out passwords:
+visitors sign in with an emailed one-time code and get read-only access; you keep full
+access with Google. Today anyone let in gets Dagster run controls, Grafana Admin and
+the VictoriaMetrics delete API. About 6 to 8 hours; needs the domain (`infra/README.md`).
+
+- [ ] Add a one-time-PIN identity provider and a demo Access application in
+      `infra/public.tf`: any verified email (or emails ending in listed domains), 4-hour
+      sessions, only the portal, Superset, Grafana and a read-only Dagster. Keep the
+      writable Dagster and the Victoria UIs and APIs admin-only (`allowed_emails`).
+- [ ] Run a second Dagster web server with `--read-only` for the demo hostname.
+- [ ] Grafana: `[auth.jwt]` on the `Cf-Access-Jwt-Assertion` header, checked against
+      `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`; admin emails get
+      Admin, everyone else Viewer; turn off the login form and anonymous access; set
+      `root_url`. Only via env on the server, so `just up` locally stays as it is.
+- [x] Superset: sign in with the signed Access token (`superset/cf_access.py`), create
+      users on first visit; `SUPERSET_ADMIN_EMAILS` get Admin, everyone else Gamma.
+- [ ] Superset: let Gamma users see the dashboards (dataset access on the role), still
+      without SQL Lab (DuckDB can read any file in the container).
+- [ ] Keep a local admin login as a backup for SSM port forwarding,
+      which bypasses Cloudflare and carry no token.
+
 ## Send alerts somewhere
 
 vmalert evaluates the SLO alerts, but `-notifier.blackhole` discards them, so a
