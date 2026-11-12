@@ -85,6 +85,9 @@ The portal also shows update feeds, defined under `feeds:` in the catalog:
   releases, from their public GitHub release feeds. Compare them with the pinned
   versions in `docker-compose.yml` and `pyproject.toml` to see when to upgrade.
 
+To host it on AWS (one EC2 spot instance, about $24/month), reached through AWS Session
+Manager, see `infra/README.md`.
+
 Homepage has one page, not a page per service. For more views, put groups on tabs
 (`layout.<group>.tab` in `portal/homepage/settings.yaml`) or embed a page with
 Homepage's `iframe` widget.
@@ -228,6 +231,7 @@ docs/diagram/                d3 script that renders docs/architecture.svg (`just
 docs/screenshots/            UI screenshots used in this README
 dagster_home/dagster.yaml    Dagster config for `just dev`
 docker/dagster.yaml          Dagster config inside Docker
+infra/                       OpenTofu: AWS EC2 host for the whole stack (infra/README.md)
 ```
 
 ## SLIs
