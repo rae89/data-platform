@@ -62,6 +62,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
   edit that file by hand.
 - `docs/diagram/`: d3 scripts for docs diagrams. `architecture.mjs` draws the README
   diagram; if you add or remove a component, update it and run `just diagram`.
+- `infra/server/deploy.py`: run on the server by CI's deploy job (SSM Run Command,
+  `infra/deploy.tf`). Standard library only: the server has no uv.
 - `infra/`: OpenTofu (`tofu`, not `terraform`) for AWS hosting: one EC2 spot instance
   with no inbound ports, reached through SSM Session Manager and, with `domain` set,
   through Cloudflare Access with Google sign-in (`public.tf`).
@@ -72,8 +74,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
   i-have-adhd). Claude Code offers to install them when you trust the folder.
 - `.github/pull_request_template.md`: PR description layout.
 - `.github/workflows/`: `ci.yml` runs `just ci` on PRs and main; `images.yml` builds the
-  Dagster and Superset images (arm64) and pushes them to `ghcr.io` on main, so the
-  server pulls instead of building.
+  Dagster and Superset images (arm64), pushes them to `ghcr.io` on main, so the
+  server pulls instead of building, then updates the server (job `deploy`).
 
 ## Rules and gotchas
 
