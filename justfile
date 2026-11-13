@@ -49,8 +49,9 @@ ci: defs-state check cov
     tofu -chdir=infra validate
 
 # Server: switch to the images CI built for main (no local build), then restart what changed
-update:
-    git pull --ff-only
+update ref="origin/main":
+    git fetch --quiet origin main
+    git merge --ff-only {{ ref }}
     docker compose pull dagster superset
     docker compose up -d
 

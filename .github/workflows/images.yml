@@ -1,6 +1,7 @@
 # Builds the Dagster and Superset images and pushes them to ghcr.io on main, so the
 # server pulls them instead of building (a build next to the running stack can exhaust
-# its 8 GB). PRs that touch an image only build it, to catch breakage before merge.
+# its 8 GB), then updates the server to that commit (job "deploy"). PRs that touch an
+# image only build it, to catch breakage before merge.
 name: Images
 
 on:
@@ -67,3 +68,53 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  # Updates the server to this commit once both images are pushed, through SSM Run
+  # Command (infra/deploy.tf): no inbound ports, no SSH, no AWS keys in GitHub.
+  # Skipped until the repository variables from `tofu -chdir=infra output github_deploy`
+  # are set (infra/README.md).
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75 # the server waits up to 60 minutes for a Dagster run to finish
+    permissions:
+      contents: read
+      id-token: write # GitHub OIDC sign-in to AWS
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Update the server
+        env:
+          INSTANCE_ID: ${{ vars.DEPLOY_INSTANCE_ID }}
+          DOCUMENT: ${{ vars.DEPLOY_SSM_DOCUMENT }}
+        run: |
+          # --timeout-seconds: how long a stopped (spot-interrupted) server may take to pick it up.
+          id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" --document-name "$DOCUMENT" \
+            --parameters commit=${{ github.sha }} --comment "deploy ${GITHUB_SHA::7}" \
+            --timeout-seconds 600 --query Command.CommandId --output text)
+          echo "SSM command $id"
+          errors=0
+          while :; do
+            if status=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+                --query Status --output text 2>/dev/null); then
+              errors=0
+            else
+              status=Pending # the invocation shows up a few seconds after send-command
+              errors=$((errors + 1))
+              [ "$errors" -lt 10 ] || { echo "Can't read the command's status"; exit 1; }
+            fi
+            case "$status" in
+              Pending | InProgress | Delayed) sleep 15 ;;
+              *) break ;;
+            esac
+          done
+          aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          echo "Status: $status"
+          [ "$status" = Success ]

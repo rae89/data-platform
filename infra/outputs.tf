@@ -24,3 +24,13 @@ output "cf_access" {
     aud         = cloudflare_zero_trust_access_application.this[0].aud
   } : null
 }
+
+output "github_deploy" {
+  description = "Repository variables for the deploy job (GitHub: Settings → Secrets and variables → Actions → Variables)."
+  value = local.deploy ? {
+    AWS_DEPLOY_ROLE_ARN = aws_iam_role.deploy[0].arn
+    AWS_REGION          = var.region
+    DEPLOY_INSTANCE_ID  = aws_instance.this.id
+    DEPLOY_SSM_DOCUMENT = aws_ssm_document.update[0].name
+  } : null
+}

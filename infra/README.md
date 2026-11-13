@@ -19,9 +19,7 @@ security group opens no ports. Ways in:
    `.env.example` to `.env`, filling in the secrets and `PLATFORM_ENV=prod`.
 5. Run `just update`: it pulls the images CI built for `main` (`ghcr.io/rae89/data-platform-*`)
    and starts everything, without building on the server.
-
-To deploy a later change: merge it to `main`, wait for the "Images" workflow, then run
-`just update` on the server.
+6. Turn on deploys from CI: set the repository variables from step 3 of the next section.
 
 To open a service, run the `port_forward` output command on your laptop and keep it
 running: http://localhost:3002 is the portal. For Dagster, change both port numbers to
@@ -29,6 +27,36 @@ running: http://localhost:3002 is the portal. For Dagster, change both port numb
 you forward.
 
 Boot problems: `/var/log/cloud-init-output.log` on the instance.
+
+## Updates after a merge to `main` (automatic)
+
+A merge to `main` updates the server about 1 minute after the "Images" workflow has
+built both images, with no one logging in. Its `deploy` job signs in to AWS with GitHub
+OIDC (no AWS keys in GitHub) and sends the server an SSM Run Command. On the server,
+`infra/server/deploy.py`:
+
+1. Waits while a Dagster run is in progress (up to 60 minutes), so an update never
+   kills a run. Still busy after that: the job fails; re-run it from the Actions tab.
+2. Runs `just update <commit>`: fast-forward, pull the images, restart what changed.
+
+The AWS role may only run that one SSM document on this one instance, and only from
+workflows on `main` of this repo. Its output is in the job log.
+
+**Turn it on (about 10 minutes, once):**
+
+1. `tofu -chdir=infra apply` creates the role, the document and the GitHub OIDC
+   provider. If the account already has a GitHub OIDC provider, the apply fails:
+   set `github_oidc_provider_arn` to its ARN in `terraform.tfvars` and apply again.
+2. `tofu -chdir=infra output github_deploy` prints 4 values.
+3. In GitHub: Settings → Secrets and variables → Actions → Variables, add each as a
+   repository variable: `AWS_DEPLOY_ROLE_ARN`, `AWS_REGION`, `DEPLOY_INSTANCE_ID`,
+   `DEPLOY_SSM_DOCUMENT`. They are identifiers, not secrets.
+4. The next merge to `main` deploys. To deploy now, run the "Images" workflow on
+   `main` from the Actions tab.
+
+Until the variables are set, the job is skipped and `just update` on the server works
+as before. To pause deploys, delete `AWS_DEPLOY_ROLE_ARN`. Local commits on the server
+make the update fail (it only fast-forwards); the job log says so.
 
 ## Adding public URLs: one-time setup (about 30 minutes)
 
