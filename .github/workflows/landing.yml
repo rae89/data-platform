@@ -1,0 +1,42 @@
+# Publishes the public landing page (landing/) to Cloudflare Pages on merge to main.
+# Skipped until the repository variables in infra/README.md ("Public landing page") exist.
+name: Landing page
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - landing/**
+      - portal/catalog.yaml
+      - portal/render_landing.py
+      - docs/architecture.svg
+      - .github/workflows/landing.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: landing
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.CF_PAGES_PROJECT != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Render
+        run: uv run python portal/render_landing.py
+        env:
+          PORTAL_PUBLIC_URL: ${{ vars.PORTAL_PUBLIC_URL }}
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy landing/dist --project-name=${{ vars.CF_PAGES_PROJECT }} --branch=main
