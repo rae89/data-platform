@@ -68,6 +68,27 @@ Boot problems: `/var/log/cloud-init-output.log` on the instance.
 5. Open `https://portal.example.com` and sign in with Google. `tofu -chdir=infra output urls`
    lists every URL.
 
+## Public landing page (about 15 minutes)
+
+With `domain` set, `tofu apply` also creates a Cloudflare Pages project (`landing.tf`)
+serving `landing/` at `https://example.com`, the zone apex. It's the only public page:
+static, no data, and its Sign in button opens the portal, where Access lets in only
+`allowed_emails`. GitHub Actions (`.github/workflows/landing.yml`) publishes it on
+merge to `main`; until the settings below exist, that job is skipped.
+
+1. Give the Cloudflare token that `tofu` uses (1Password `data-platform-cloudflare`) the
+   **Account → Cloudflare Pages → Edit** permission, then apply.
+2. Create a second API token with only **Account → Cloudflare Pages → Edit** and add it
+   to GitHub (Settings → Secrets and variables → Actions) as the secret
+   `CLOUDFLARE_PAGES_TOKEN`.
+3. Add 3 repository variables: `CF_PAGES_PROJECT` (`project` from
+   `tofu -chdir=infra output landing`), `CLOUDFLARE_ACCOUNT_ID`, and `PORTAL_PUBLIC_URL`
+   (the same value as in `.env`, e.g. `https://{name}.example.com`).
+4. Run the "Landing page" workflow from the Actions tab, then open `https://example.com`.
+
+Preview it locally: `PORTAL_PUBLIC_URL='https://{name}.example.com' just landing`, then
+open `landing/dist/index.html`.
+
 ## Adding a service
 
 Add it to `local.services` in `public.tf` (subdomain → port) and set `public:` to the

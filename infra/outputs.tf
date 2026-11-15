@@ -24,3 +24,12 @@ output "cf_access" {
     aud         = cloudflare_zero_trust_access_application.this[0].aud
   } : null
 }
+
+output "landing" {
+  description = "Public landing page: CF_PAGES_PROJECT for GitHub, and where it's served."
+  value = local.public ? {
+    project   = cloudflare_pages_project.landing[0].name
+    url       = "https://${var.domain}"
+    pages_dev = "https://${cloudflare_pages_project.landing[0].subdomain}"
+  } : null
+}
