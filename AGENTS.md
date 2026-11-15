@@ -28,6 +28,7 @@ just ci              # every check CI runs (defs, tests, just and OpenTofu forma
 just update          # on the server: pull CI-built images for main and restart
 just dlt-dashboard   # dlt pipeline dashboard (schema, state, loads), :2718
 just portal          # render the portal landing page from portal/catalog.yaml
+just landing         # render the public landing page into landing/dist (needs PORTAL_PUBLIC_URL)
 just diagram         # re-render docs diagrams (docs/diagram/*.mjs → docs/*.svg)
 uv run dg list defs  # list assets, checks, jobs, sensors
 ```
@@ -57,6 +58,9 @@ After changing dbt models, run `just defs-state` (and `just check`).
 - `grafana/`: provisioned data sources and dashboards (JSON).
 - `superset/`: Superset image (DuckDB driver pinned to the uv.lock version), config,
   and `assets/` imported on start (the warehouse connection).
+- `landing/index.html`: the public landing page (Cloudflare Pages, `infra/landing.tf`).
+  `just landing` renders it into `landing/dist/` with `portal/render_landing.py`;
+  `.github/workflows/landing.yml` publishes it on merge to `main`.
 - `portal/catalog.yaml`: tool-neutral list of every component for the portal landing
   page (Homepage, :3002). `just portal` renders `portal/homepage/services.yaml`; don't
   edit that file by hand.
@@ -109,6 +113,8 @@ After changing dbt models, run `just defs-state` (and `just check`).
   to `local.services` in `infra/public.tf` and set `public:` in the catalog.
 - **Public access goes through Cloudflare Access only.** Never open inbound ports in
   `infra/main.tf`: most services have no login of their own.
+  The landing page (`landing/`) is the only public page: static, no data, and no links
+  except the portal's Sign in. Keep every server hostname inside the Access application.
 - If you rename or add a metric, update `vmalert/rules.yml`, the Grafana dashboards,
   the portal widgets in `portal/catalog.yaml` and the SLI table in `README.md`
   together.
