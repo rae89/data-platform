@@ -2,7 +2,7 @@
 
 dbt + Dagster + DuckDB, with SLI metrics in VictoriaMetrics and logs in VictoriaLogs.
 
-![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read; a read-only snapshot of the marts feeds Superset; the Homepage portal links and health-checks every service, shows live SLIs from VictoriaMetrics and pulls update feeds from GitHub](docs/architecture.svg)
+![Architecture: Dagster runs ingest and dbt into DuckDB; SLI sensors and the log handler feed VictoriaMetrics and VictoriaLogs, which vmalert and Grafana read; a read-only snapshot of the marts feeds Superset; the Homepage portal links and health-checks every service, shows live SLIs from VictoriaMetrics and pulls update feeds from GitHub; a public landing page on Cloudflare Pages sends approved users to the portal through Cloudflare Access](docs/architecture.svg)
 
 The diagram is drawn with d3 by `docs/diagram/architecture.mjs`. After editing it,
 run `just diagram` (needs Node) and commit the regenerated `docs/architecture.svg`.
@@ -51,6 +51,22 @@ The SLI dashboard in Grafana, after the SLI sensors exported that run.
 The same run's logs in VictoriaLogs (`service:dagster job:refresh_all`).
 
 ![VictoriaLogs vmui showing log lines for the refresh_all run](docs/screenshots/victorialogs-run-logs.png)
+
+## Landing page
+
+A public page explains the platform and has a **Sign in** button. Sign in opens the
+portal, where Cloudflare Access lets in only `allowed_emails`; everyone else stops there.
+The page is static (`landing/index.html`, Cloudflare Pages) and lists the tools from
+`portal/catalog.yaml` that have a public hostname.
+
+Preview it:
+
+```bash
+PORTAL_PUBLIC_URL='https://{name}.example.com' just landing   # then open landing/dist/index.html
+```
+
+To edit it, change `landing/index.html`; a merge to `main` publishes it. Setup (about
+15 minutes): [infra/README.md, "Public landing page"](infra/README.md#public-landing-page-about-15-minutes).
 
 ## Portal
 

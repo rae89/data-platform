@@ -63,6 +63,10 @@ portal:
     uv run python portal/render_homepage.py
     docker compose restart portal
 
+# Public landing page (Cloudflare Pages) into landing/dist; needs PORTAL_PUBLIC_URL
+landing:
+    uv run python portal/render_landing.py
+
 # Pipelines store their warehouse path only at run time, so it's passed in, read-only
 # (AGENTS.md: other processes open the warehouse read-only). `dlt dashboard` requires
 # the commercial dlt[hub]; dlt's own run_dashboard() (open source) doesn't.
