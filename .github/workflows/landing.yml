@@ -22,7 +22,8 @@ concurrency:
 
 jobs:
   deploy:
-    if: vars.CF_PAGES_PROJECT != ''
+    # Secrets can't be checked here; a missing CLOUDFLARE_PAGES_TOKEN fails at Deploy.
+    if: vars.CF_PAGES_PROJECT != '' && vars.CLOUDFLARE_ACCOUNT_ID != '' && vars.PORTAL_PUBLIC_URL != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -35,7 +36,8 @@ jobs:
         env:
           PORTAL_PUBLIC_URL: ${{ vars.PORTAL_PUBLIC_URL }}
       - name: Deploy
-        uses: cloudflare/wrangler-action@v3
+        # Pinned to a commit: this step holds the Cloudflare token.
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

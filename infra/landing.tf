@@ -15,6 +15,8 @@ resource "cloudflare_pages_domain" "landing" {
   account_id   = var.cloudflare_account_id
   project_name = cloudflare_pages_project.landing[0].name
   name         = var.domain
+  # Pages checks the CNAME when the domain is added; without it the domain stays pending.
+  depends_on = [cloudflare_dns_record.landing]
 }
 
 # Pages doesn't create the record for API-added domains.
