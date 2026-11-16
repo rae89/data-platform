@@ -76,6 +76,12 @@ variable "github_repo" {
   default     = "rae89/data-platform"
 }
 
+variable "github_oidc_sub_prefix" {
+  description = "Prefix of the `sub` claim in GitHub's OIDC tokens. This repo uses immutable subjects (owner and repo with their IDs): `gh api repos/<owner>/<name>/actions/oidc/customization/sub` prints it as sub_claim_prefix. Null: repo:<github_repo>."
+  type        = string
+  default     = "repo:rae89@9400794/data-platform@1448576146"
+}
+
 variable "github_oidc_provider_arn" {
   description = "ARN of an existing GitHub OIDC provider in this AWS account (an account has at most one). Null: create it."
   type        = string

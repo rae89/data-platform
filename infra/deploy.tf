@@ -65,7 +65,7 @@ resource "aws_iam_role" "deploy" {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           # Only workflows running on main of this repo, never PRs or forks.
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = "${coalesce(var.github_oidc_sub_prefix, "repo:${var.github_repo}")}:ref:refs/heads/main"
         }
       }
     }]
