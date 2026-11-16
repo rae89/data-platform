@@ -25,6 +25,16 @@ output "cf_access" {
   } : null
 }
 
+output "github_deploy" {
+  description = "Repository variables for the deploy job (GitHub: Settings → Secrets and variables → Actions → Variables)."
+  value = local.deploy ? {
+    AWS_DEPLOY_ROLE_ARN = aws_iam_role.deploy[0].arn
+    AWS_REGION          = var.region
+    DEPLOY_INSTANCE_ID  = aws_instance.this.id
+    DEPLOY_SSM_DOCUMENT = aws_ssm_document.update[0].name
+  } : null
+}
+
 output "landing" {
   description = "Public landing page: CF_PAGES_PROJECT for GitHub, and where it's served."
   value = local.public ? {

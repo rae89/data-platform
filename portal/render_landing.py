@@ -24,10 +24,11 @@ def sign_in_url(public_url: str | None) -> str:
 
 def render(template: str, catalog: dict, public_url: str | None) -> str:
     # Only components with a public hostname: visitors can never reach the others.
+    # public "" is this page itself.
     items = "\n".join(
         f"<li><strong>{html.escape(c['name'])}</strong> {html.escape(c['description'])}</li>"
         for c in catalog["components"]
-        if "public" in c
+        if c.get("public")
     )
     return Template(template).substitute(sign_in_url=html.escape(sign_in_url(public_url)), components=items)
 

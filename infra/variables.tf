@@ -67,3 +67,23 @@ variable "google_client_secret" {
   default     = null
   sensitive   = true
 }
+
+# Deploys from CI (deploy.tf).
+
+variable "github_repo" {
+  description = "GitHub repo (owner/name) whose main branch may update the server. Null: no deploys from CI."
+  type        = string
+  default     = "rae89/data-platform"
+}
+
+variable "github_oidc_provider_arn" {
+  description = "ARN of an existing GitHub OIDC provider in this AWS account (an account has at most one). Null: create it."
+  type        = string
+  default     = null
+}
+
+variable "repo_dir" {
+  description = "Checkout on the instance that deploys update (infra/README.md, step 4)."
+  type        = string
+  default     = "/home/ubuntu/data-platform"
+}

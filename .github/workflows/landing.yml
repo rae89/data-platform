@@ -32,7 +32,7 @@ jobs:
         with:
           enable-cache: true
       - name: Render
-        run: uv run python portal/render_landing.py
+        run: uv run --no-project --with pyyaml python portal/render_landing.py # only needs PyYAML
         env:
           PORTAL_PUBLIC_URL: ${{ vars.PORTAL_PUBLIC_URL }}
       - name: Deploy

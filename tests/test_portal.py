@@ -118,10 +118,12 @@ def test_public_url_keeps_path_and_query_and_skips_local_only_entries():
         "components": [
             {"name": "VM", "group": "G", "description": "", "url": "http://localhost:8428/vmui?x=1", "public": "victoriametrics"},
             {"name": "dlt", "group": "G", "description": "", "url": "http://localhost:2718"},
+            {"name": "Landing", "group": "G", "description": "", "url": "https://github.com/o/r", "public": ""},
         ]
     }
     rendered = yaml.safe_load(render_homepage.render(entries, "https://dp-{name}.example.com"))
     assert [s[n]["href"] for s in rendered[0]["G"] for n in s] == [
         "https://dp-victoriametrics.example.com/vmui?x=1",
         "http://localhost:2718",
+        "https://example.com/",
     ]
