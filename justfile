@@ -60,6 +60,9 @@ update-pull ref="origin/main":
     if [ "{{ ref }}" = origin/main ] || ! git cat-file -e "{{ ref }}^{commit}" 2>/dev/null; then
         git fetch --quiet origin main
     fi
+    # Generated, and rewritten with public links on the server (portal-public): discard
+    # it so the fast-forward doesn't stop on it, and render it again below.
+    git checkout -- portal/homepage/services.yaml
     git merge --ff-only "{{ ref }}"
     # CI tags each image sha-<commit> (images.yml); retag it as the :main that
     # docker-compose.yml runs, so the images always match the checkout.
@@ -69,6 +72,17 @@ update-pull ref="origin/main":
         docker pull --quiet "$image:$tag"
         docker tag "$image:$tag" "$image:main"
     done
+    if grep -q '^PORTAL_PUBLIC_URL=.' .env 2>/dev/null; then {{ just_executable() }} portal-public; fi
+
+# Server: render the portal with public links (PORTAL_PUBLIC_URL in .env), in the Dagster
+# image because the server has no uv
+portal-public:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    url=$(sed -n 's/^PORTAL_PUBLIC_URL=//p' .env)
+    [ -n "$url" ] || { echo "Set PORTAL_PUBLIC_URL in .env first"; exit 1; }
+    docker compose run --rm --no-deps -e PORTAL_PUBLIC_URL="$url" -v ./portal:/portal \
+        --entrypoint python dagster /portal/render_homepage.py
 
 # Rebuild the dbt component state (manifest) after changing dbt models
 defs-state:
