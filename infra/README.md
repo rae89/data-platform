@@ -58,6 +58,11 @@ workflows on `main` of this repo. Its output is in the job log.
 4. The next merge to `main` deploys. To deploy now, run the "Images" workflow on
    `main` from the Actions tab.
 
+`Not authorized to perform sts:AssumeRoleWithWebIdentity` in the job: the role's
+`sub` condition doesn't match the token. Set `github_oidc_sub_prefix` to the
+`sub_claim_prefix` from `gh api repos/<owner>/<name>/actions/oidc/customization/sub`
+(this repo uses immutable subjects, which include the owner and repo IDs), then apply.
+
 Until the variables are set, the job is skipped and `just update` on the server works
 as before. To pause deploys, delete `AWS_DEPLOY_ROLE_ARN`. Local commits on the server
 make the update fail (it only fast-forwards); the job log says so.

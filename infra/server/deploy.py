@@ -4,7 +4,7 @@
 CI's "deploy" job (.github/workflows/images.yml) runs this on the server through SSM
 Run Command (infra/deploy.tf) after both images for the commit are built:
 
-1. Runs `just update-pull <commit>`: fast-forward and pull that commit's images.
+1. Fast-forwards to the commit, then runs its `just update-pull`: pull its images.
 2. Waits while a Dagster run is in progress (up to 60 minutes), so an update never
    kills a run.
 3. Runs `docker compose up -d` right after the last check: restart what changed.
@@ -97,9 +97,11 @@ def main(argv: Sequence[str] | None = None, sleep=time.sleep) -> int:
     args = parse_args(argv)
     short = args.commit[:7]
     log(f"pulling {short}")
-    if code := run(["just", "update-pull", args.commit]):
-        log(f"`just update-pull` failed with exit code {code}")
-        return code
+    # Fast-forward first: `just update-pull` must come from the new justfile, not the old one.
+    for command in (["git", "merge", "--ff-only", "--quiet", args.commit], ["just", "update-pull", args.commit]):
+        if code := run(command):
+            log(f"`{' '.join(command[:2])}` failed with exit code {code}")
+            return code
 
     runs = wait_until_idle(args, sleep)
     if runs:
