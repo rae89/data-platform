@@ -94,6 +94,12 @@
         - label: Firing alerts
           query: count(ALERTS{alertstate="firing", env="{{HOMEPAGE_VAR_PLATFORM_ENV}}"})
             or vector(0)
+- Links:
+  - Landing page:
+      href: https://github.com/rae89/data-platform/tree/main/landing
+      description: Public page on Cloudflare Pages (landing/), the only one without
+        sign-in
+      icon: mdi-web
 - Updates:
   - Platform changes:
       href: https://github.com/rae89/data-platform/pulls?q=is%3Apr+is%3Amerged

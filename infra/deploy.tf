@@ -41,10 +41,11 @@ resource "aws_ssm_document" "update" {
       action = "aws:runShellScript"
       name   = "update"
       inputs = {
-        timeoutSeconds = "4200" # deploy.py waits up to 60 minutes for a Dagster run
+        # 10 minutes for the lock (a deploy run by hand), 10 to pull, 60 for a Dagster run.
+        timeoutSeconds = "4800"
         runCommand = [
           "set -eu",
-          "exec flock -w 4200 /run/data-platform-update.lock sudo -iu ubuntu bash -euo pipefail -c 'cd ${var.repo_dir} && git fetch --quiet origin main && git show {{ commit }}:infra/server/deploy.py | python3 - {{ commit }}'",
+          "exec flock -w 600 /run/data-platform-update.lock sudo -iu ubuntu bash -euo pipefail -c 'cd ${var.repo_dir} && git fetch --quiet origin main && git show {{ commit }}:infra/server/deploy.py | python3 - {{ commit }}'",
         ]
       }
     }]

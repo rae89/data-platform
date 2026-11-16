@@ -49,11 +49,26 @@ ci: defs-state check cov
     tofu -chdir=infra validate
 
 # Server: switch to the images CI built for main (no local build), then restart what changed
-update ref="origin/main":
-    git fetch --quiet origin main
-    git merge --ff-only {{ ref }}
-    docker compose pull dagster superset
+update ref="origin/main": (update-pull ref)
     docker compose up -d
+
+# Server: fast-forward to ref and pull the images CI built for exactly that commit
+update-pull ref="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The deploy job fetches before calling this; fetch only for origin/main or a missing commit.
+    if [ "{{ ref }}" = origin/main ] || ! git cat-file -e "{{ ref }}^{commit}" 2>/dev/null; then
+        git fetch --quiet origin main
+    fi
+    git merge --ff-only "{{ ref }}"
+    # CI tags each image sha-<commit> (images.yml); retag it as the :main that
+    # docker-compose.yml runs, so the images always match the checkout.
+    tag="sha-$(git rev-parse HEAD)"
+    for name in dagster superset; do
+        image="ghcr.io/rae89/data-platform-$name"
+        docker pull --quiet "$image:$tag"
+        docker tag "$image:$tag" "$image:main"
+    done
 
 # Rebuild the dbt component state (manifest) after changing dbt models
 defs-state:

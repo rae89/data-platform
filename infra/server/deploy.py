@@ -4,9 +4,10 @@
 CI's "deploy" job (.github/workflows/images.yml) runs this on the server through SSM
 Run Command (infra/deploy.tf) after both images for the commit are built:
 
-1. Waits while a Dagster run is in progress (up to 60 minutes), so an update never
+1. Runs `just update-pull <commit>`: fast-forward and pull that commit's images.
+2. Waits while a Dagster run is in progress (up to 60 minutes), so an update never
    kills a run.
-2. Runs `just update <commit>`: fast-forward, pull the images, restart what changed.
+3. Runs `docker compose up -d` right after the last check: restart what changed.
 
 By hand, in the checkout on the server: `python3 infra/server/deploy.py <commit>`.
 Standard library only: the server has the system python3, not uv.
@@ -24,14 +25,18 @@ import urllib.request
 from collections.abc import Sequence
 
 DAGSTER_URL = "http://localhost:3000"
-# Statuses that mean a run holds the warehouse right now. QUEUED runs survive a restart.
-ACTIVE_STATUSES = ("STARTING", "STARTED", "CANCELING")
+# Statuses that mean a run holds, or is about to hold, the warehouse. QUEUED runs
+# survive a restart; NOT_STARTED ones (submitted, not launched yet) may not.
+ACTIVE_STATUSES = ("NOT_STARTED", "STARTING", "STARTED", "CANCELING")
 RUNS_QUERY = (
     "query ActiveRuns($statuses: [RunStatus!]) {"
     " runsOrError(filter: {statuses: $statuses}) {"
     " __typename ... on Runs { results { runId } } } }"
 )
 BUSY = 75  # EX_TEMPFAIL: still busy after the wait; re-run the deploy job later
+# A slow or erroring Dagster during a run must not count as "down": only this many
+# failed checks in a row do.
+DOWN_AFTER = 3
 
 
 def log(message: str) -> None:
@@ -59,9 +64,9 @@ def active_runs(dagster_url: str) -> int | None:
     return len(runs.get("results") or [])
 
 
-def just_update(commit: str) -> int:
-    """The same update as by hand; its output goes to the deploy job's log."""
-    return subprocess.run(["just", "update", commit], check=False).returncode
+def run(args: list[str]) -> int:
+    """Runs a command in the checkout; its output goes to the deploy job's log."""
+    return subprocess.run(args, check=False).returncode
 
 
 def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -73,22 +78,39 @@ def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def wait_until_idle(args: argparse.Namespace, sleep) -> int | None:
+    """0 when idle, None when Dagster stayed down, else the runs still in progress."""
+    deadline = time.monotonic() + args.wait_minutes * 60
+    failures = 0
+    while True:
+        runs = active_runs(args.dagster_url)
+        failures = failures + 1 if runs is None else 0
+        if runs == 0 or failures >= DOWN_AFTER or time.monotonic() >= deadline:
+            return runs
+        log(
+            "Dagster didn't answer" if runs is None else f"{runs} Dagster run(s) in progress"
+        )
+        sleep(args.poll_seconds)
+
+
 def main(argv: Sequence[str] | None = None, sleep=time.sleep) -> int:
     args = parse_args(argv)
     short = args.commit[:7]
-    deadline = time.monotonic() + args.wait_minutes * 60
-    while (runs := active_runs(args.dagster_url)) and time.monotonic() < deadline:
-        log(f"{runs} Dagster run(s) in progress; checking again in {args.poll_seconds:g}s")
-        sleep(args.poll_seconds)
+    log(f"pulling {short}")
+    if code := run(["just", "update-pull", args.commit]):
+        log(f"`just update-pull` failed with exit code {code}")
+        return code
+
+    runs = wait_until_idle(args, sleep)
     if runs:
         log(f"still {runs} run(s) after {args.wait_minutes:g} minutes; re-run the deploy later")
         return BUSY
     if runs is None:
         log("Dagster didn't answer; updating anyway")
 
-    log(f"updating to {short}")
-    code = just_update(args.commit)
-    log(f"now on {short}" if code == 0 else f"`just update` failed with exit code {code}")
+    # Straight after the last check: a run a sensor starts in between would be killed.
+    code = run(["docker", "compose", "up", "-d"])
+    log(f"now on {short}" if code == 0 else f"`docker compose up` failed with exit code {code}")
     return code
 
 

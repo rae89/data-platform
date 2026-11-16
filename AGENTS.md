@@ -25,7 +25,7 @@ just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
 just cov             # tests with coverage, fails below 99%
 just ci              # every check CI runs (defs, tests, just and OpenTofu formatting)
-just update          # on the server: pull CI-built images for main and restart
+just update          # on the server: pull CI-built images for main's commit and restart
 just dlt-dashboard   # dlt pipeline dashboard (schema, state, loads), :2718
 just portal          # render the portal landing page from portal/catalog.yaml
 just landing         # render the public landing page into landing/dist (needs PORTAL_PUBLIC_URL)

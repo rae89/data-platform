@@ -23,6 +23,7 @@ const nodes = [
   { id: "superset", x: 930, y: 140, kind: "bi", title: "Superset", sub: ":8088 dashboards, SQL Lab" },
   { id: "github", x: 930, y: 250, kind: "portal", title: "GitHub", sub: "merged PRs, releases" },
   { id: "portal", x: 930, y: 350, kind: "portal", title: "Portal (Homepage)", sub: ":3002 links, health checks" },
+  { id: "landing", x: 930, y: 460, kind: "portal", title: "Landing page", sub: "Cloudflare Pages, public" },
 ];
 const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
@@ -31,6 +32,7 @@ const edges = [
   { from: "duckdb", to: "dltdash", label: "inspects" },  // early, so later labels draw over it
   { from: "vm", to: "portal", label: "live SLIs" },  // first, so other labels draw over its line
   { from: "github", to: "portal", side: "v", label: "feeds" },
+  { from: "landing", to: "portal", side: "v", label: "Sign in (Access)" },
   { from: "apis", to: "ingest", side: "v", label: "dlt" },
   { from: "duckdb", to: "bi", label: "copy" },
   { from: "bi", to: "superset", label: "reads" },
@@ -68,8 +70,10 @@ const linkV = d3.linkVertical();
 const g = svg.append("g");
 for (const e of edges) {
   const a = byId[e.from], b = byId[e.to];
+  // "v" runs bottom → top, or top → bottom when the target sits above the source.
+  const [y1, y2] = a.y > b.y ? [a.y, b.y + NH] : [a.y + NH, b.y];
   const [path, mid] = e.side === "v"
-    ? [linkV({ source: [a.x + NW / 2, a.y + NH], target: [b.x + NW / 2, b.y] }), [a.x + NW / 2 + 8, (a.y + NH + b.y) / 2 + 4]]
+    ? [linkV({ source: [a.x + NW / 2, y1], target: [b.x + NW / 2, y2] }), [a.x + NW / 2 + 8, (y1 + y2) / 2 + 4]]
     : [link({ source: [a.x + NW, a.y + NH / 2], target: [b.x, b.y + NH / 2] }),
        [(a.x + NW + b.x) / 2, (a.y + b.y + NH) / 2 - 6]];
   g.append("path").attr("d", path).attr("fill", "none").attr("stroke", "#64748b")

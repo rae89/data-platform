@@ -17,8 +17,9 @@ security group opens no ports. Ways in:
    `sudo -iu ubuntu` (that user can run Docker).
 4. Clone the repo, `git clone https://github.com/rae89/data-platform.git`, and copy
    `.env.example` to `.env`, filling in the secrets and `PLATFORM_ENV=prod`.
-5. Run `just update`: it pulls the images CI built for `main` (`ghcr.io/rae89/data-platform-*`)
-   and starts everything, without building on the server.
+5. Run `just update`: it pulls the images CI built for the `main` commit
+   (`ghcr.io/rae89/data-platform-*:sha-<commit>`) and starts everything, without
+   building on the server.
 6. Turn on deploys from CI: set the repository variables from step 3 of the next section.
 
 To open a service, run the `port_forward` output command on your laptop and keep it
@@ -35,9 +36,12 @@ built both images, with no one logging in. Its `deploy` job signs in to AWS with
 OIDC (no AWS keys in GitHub) and sends the server an SSM Run Command. On the server,
 `infra/server/deploy.py`:
 
-1. Waits while a Dagster run is in progress (up to 60 minutes), so an update never
-   kills a run. Still busy after that: the job fails; re-run it from the Actions tab.
-2. Runs `just update <commit>`: fast-forward, pull the images, restart what changed.
+1. Runs `just update-pull <commit>`: fast-forward and pull the images built for that
+   exact commit (tag `sha-<commit>`, retagged as `:main`).
+2. Waits while a Dagster run is in progress (up to 60 minutes), so an update never
+   kills a run. Still busy after that: the job fails with the new code checked out but
+   not running; re-run it from the Actions tab.
+3. Runs `docker compose up -d` right after the last check: restart what changed.
 
 The AWS role may only run that one SSM document on this one instance, and only from
 workflows on `main` of this repo. Its output is in the job log.

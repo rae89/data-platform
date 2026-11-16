@@ -20,6 +20,7 @@ CATALOG = {
             "public": "dagster",
         },
         {"name": "dlt dashboard", "group": "Orchestration", "description": "local", "url": "http://localhost:2718"},
+        {"name": "Landing page", "group": "Links", "description": "this page", "url": "https://x", "public": ""},
     ]
 }
 TEMPLATE = '<a href="$sign_in_url">Sign in</a><ul>$components</ul>'
@@ -37,7 +38,7 @@ def test_sign_in_url_rejects_missing_or_bad_value():
 
 def test_lists_only_public_components():
     html = render_landing.render(TEMPLATE, CATALOG, URL)
-    assert "Dagster" in html and "dlt dashboard" not in html
+    assert "Dagster" in html and "dlt dashboard" not in html and "Landing page" not in html
 
 
 def test_escapes_catalog_text():

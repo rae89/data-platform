@@ -25,12 +25,12 @@ permissions:
   contents: read
   packages: write
 
-concurrency:
-  group: images-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
+    # Per job, not per workflow: a newer push cancels an older build, never a deploy.
+    concurrency:
+      group: images-${{ github.ref }}-${{ matrix.name }}
+      cancel-in-progress: true
     # shortcut: arm64 only, the server's architecture (t4g); add linux/amd64 and a
     # manifest merge when something x86 needs these images.
     runs-on: ubuntu-24.04-arm
@@ -58,7 +58,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}-${{ matrix.name }}
           tags: |
             type=raw,value=main,enable={{is_default_branch}}
-            type=sha
+            type=sha,format=long
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
@@ -77,7 +77,7 @@ jobs:
     needs: build
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 75 # the server waits up to 60 minutes for a Dagster run to finish
+    timeout-minutes: 90 # the SSM step may take 80 minutes (infra/deploy.tf)
     permissions:
       contents: read
       id-token: write # GitHub OIDC sign-in to AWS
