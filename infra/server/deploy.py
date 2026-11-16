@@ -98,7 +98,12 @@ def main(argv: Sequence[str] | None = None, sleep=time.sleep) -> int:
     short = args.commit[:7]
     log(f"pulling {short}")
     # Fast-forward first: `just update-pull` must come from the new justfile, not the old one.
-    for command in (["git", "merge", "--ff-only", "--quiet", args.commit], ["just", "update-pull", args.commit]):
+    # services.yaml is generated and holds public links on the server (`just portal-public`).
+    for command in (
+        ["git", "checkout", "--", "portal/homepage/services.yaml"],
+        ["git", "merge", "--ff-only", "--quiet", args.commit],
+        ["just", "update-pull", args.commit],
+    ):
         if code := run(command):
             log(f"`{' '.join(command[:2])}` failed with exit code {code}")
             return code

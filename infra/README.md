@@ -101,7 +101,8 @@ make the update fail (it only fast-forwards); the job log says so.
    `PORTAL_PUBLIC_URL`, and for Superset sign-in through Access `CF_ACCESS_TEAM_DOMAIN`,
    `CF_ACCESS_AUD` from `tofu -chdir=infra output cf_access`, `SUPERSET_ADMIN_EMAILS`),
    then run `just up`. Superset then has no password login: reach it through Access.
-4. Run `PORTAL_PUBLIC_URL=https://{name}.example.com just portal`.
+4. On the server, run `just portal-public`: it renders the portal with links to the
+   public hostnames (`PORTAL_PUBLIC_URL` from `.env`). Each deploy renders it again.
 5. Open `https://portal.example.com` and sign in with Google. `tofu -chdir=infra output urls`
    lists every URL.
 

@@ -25,13 +25,14 @@ def server(monkeypatch):
 
     def fake_run(args):
         state["commands"].append(args)
-        return state["codes"].get(args[1], 0)
+        return state["codes"].get(args[1], 0)  # keyed by subcommand: merge, update-pull, ...
 
     monkeypatch.setattr(deploy, "active_runs", fake_active_runs)
     monkeypatch.setattr(deploy, "run", fake_run)
     return state
 
 
+DISCARD = ["git", "checkout", "--", "portal/homepage/services.yaml"]
 MERGE = ["git", "merge", "--ff-only", "--quiet", COMMIT]
 PULL = ["just", "update-pull", COMMIT]
 UP = ["docker", "compose", "up", "-d"]
@@ -43,7 +44,7 @@ def run(state, *args):
 
 def test_pulls_then_restarts_when_idle(server, capsys):
     assert run(server) == 0
-    assert server["commands"] == [MERGE, PULL, UP]
+    assert server["commands"] == [DISCARD, MERGE, PULL, UP]
     assert "now on 0123456" in capsys.readouterr().out
 
 
@@ -51,14 +52,14 @@ def test_waits_for_runs_to_finish(server, capsys):
     server["runs"] = [2, 1, 0]
     assert run(server, "--poll-seconds", "5") == 0
     assert server["sleeps"] == [5, 5]
-    assert server["commands"] == [MERGE, PULL, UP]
+    assert server["commands"] == [DISCARD, MERGE, PULL, UP]
     assert "2 Dagster run(s) in progress" in capsys.readouterr().out
 
 
 def test_gives_up_when_still_busy(server, capsys):
     server["runs"] = [1]
     assert run(server, "--wait-minutes", "0") == deploy.BUSY
-    assert server["commands"] == [MERGE, PULL]
+    assert server["commands"] == [DISCARD, MERGE, PULL]
     assert "re-run the deploy later" in capsys.readouterr().out
 
 
@@ -66,28 +67,28 @@ def test_a_slow_answer_during_a_run_is_not_down(server):
     server["runs"] = [1, None, None, 1, 0]
     assert run(server) == 0
     assert len(server["sleeps"]) == 4
-    assert server["commands"] == [MERGE, PULL, UP]
+    assert server["commands"] == [DISCARD, MERGE, PULL, UP]
 
 
 def test_updates_when_dagster_stays_down(server, capsys):
     server["runs"] = [None]
     assert run(server) == 0
     assert len(server["sleeps"]) == deploy.DOWN_AFTER - 1
-    assert server["commands"] == [MERGE, PULL, UP]
+    assert server["commands"] == [DISCARD, MERGE, PULL, UP]
     assert "updating anyway" in capsys.readouterr().out
 
 
 def test_stops_when_the_pull_fails(server, capsys):
     server["codes"] = {"update-pull": 3}
     assert run(server) == 3
-    assert server["commands"] == [MERGE, PULL]
+    assert server["commands"] == [DISCARD, MERGE, PULL]
     assert "`just update-pull` failed with exit code 3" in capsys.readouterr().out
 
 
 def test_stops_when_the_fast_forward_fails(server, capsys):
     server["codes"] = {"merge": 128}
     assert run(server) == 128
-    assert server["commands"] == [MERGE]
+    assert server["commands"] == [DISCARD, MERGE]
     assert "`git merge` failed with exit code 128" in capsys.readouterr().out
 
 
