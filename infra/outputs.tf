@@ -34,3 +34,12 @@ output "github_deploy" {
     DEPLOY_SSM_DOCUMENT = aws_ssm_document.update[0].name
   } : null
 }
+
+output "landing" {
+  description = "Public landing page: CF_PAGES_PROJECT for GitHub, and where it's served."
+  value = local.public ? {
+    project   = cloudflare_pages_project.landing[0].name
+    url       = "https://${var.domain}"
+    pages_dev = "https://${cloudflare_pages_project.landing[0].subdomain}"
+  } : null
+}
