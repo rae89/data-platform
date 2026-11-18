@@ -1,7 +1,7 @@
 {
   "uid": "dagster-asset-freshness",
   "title": "Dagster asset freshness heatmap",
-  "description": "Minutes since each Dagster asset was last materialized, as a heatmap (one row per asset). SLO: 120 minutes.",
+  "description": "Hours since each Dagster asset was last materialized, as a heatmap (one row per asset). SLO: 26 hours.",
   "tags": ["dagster", "freshness", "slo"],
   "schemaVersion": 39,
   "editable": true,
@@ -40,8 +40,8 @@
     {
       "id": 1,
       "type": "status-history",
-      "title": "Asset age heatmap, minutes (SLO 120)",
-      "description": "Each row is an asset and each cell a time slot. The cell shows the oldest the asset got in that slot. Green under 1h, yellow 1-1.5h, orange 1.5-2h, red past the 2h SLO. Empty cells mean no data.",
+      "title": "Asset age heatmap, hours (SLO 26)",
+      "description": "Each row is an asset and each cell a time slot. The cell shows the oldest the asset got in that slot. Green under 24h (one daily load), yellow 24-25h, orange 25-26h, red past the 26h SLO. Empty cells mean no data.",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 14 },
       "interval": "5m",
@@ -50,23 +50,23 @@
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "expr": "max by (asset) (max_over_time(dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"}[$__interval])) / 60",
+          "expr": "max by (asset) (max_over_time(dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"}[$__interval])) / 3600",
           "legendFormat": "{{asset}}",
           "range": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "m",
+          "unit": "h",
           "decimals": 0,
           "color": { "mode": "thresholds" },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 60 },
-              { "color": "orange", "value": 90 },
-              { "color": "red", "value": 120 }
+              { "color": "yellow", "value": 24 },
+              { "color": "orange", "value": 25 },
+              { "color": "red", "value": 26 }
             ]
           },
           "custom": { "fillOpacity": 85, "lineWidth": 1 }
@@ -84,31 +84,31 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Current age, minutes",
-      "description": "Minutes since each asset was last materialized, right now.",
+      "title": "Current age, hours",
+      "description": "Hours since each asset was last materialized, right now.",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 0, "y": 14, "w": 16, "h": 6 },
       "targets": [
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "expr": "max by (asset) (dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"}) / 60",
+          "expr": "max by (asset) (dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"}) / 3600",
           "legendFormat": "{{asset}}",
           "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "m",
+          "unit": "h",
           "decimals": 0,
           "color": { "mode": "thresholds" },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 60 },
-              { "color": "orange", "value": 90 },
-              { "color": "red", "value": 120 }
+              { "color": "yellow", "value": 24 },
+              { "color": "orange", "value": 25 },
+              { "color": "red", "value": 26 }
             ]
           }
         },
@@ -127,14 +127,14 @@
       "id": 3,
       "type": "stat",
       "title": "Time stale in range",
-      "description": "Share of the selected time range each asset spent past the 2h SLO.",
+      "description": "Share of the selected time range each asset spent past the 26h SLO.",
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "gridPos": { "x": 16, "y": 14, "w": 8, "h": 6 },
       "targets": [
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-          "expr": "max by (asset) (avg_over_time((dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"} > bool 7200)[$__range:1m]))",
+          "expr": "max by (asset) (avg_over_time((dagster_asset_age_seconds{env=~\"$env\", group=~\"$group\"} > bool 26 * 3600)[$__range:1m]))",
           "legendFormat": "{{asset}}",
           "instant": true
         }

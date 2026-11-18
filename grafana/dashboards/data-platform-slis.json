@@ -189,7 +189,7 @@
     },
     {
       "type": "bargauge",
-      "title": "Asset age (SLO 2h)",
+      "title": "Asset age (SLO 26h)",
       "description": "Time since each asset was last materialized. Keeps growing if Dagster stops reporting.",
       "gridPos": {
         "x": 14,
@@ -218,7 +218,7 @@
         "defaults": {
           "unit": "s",
           "min": 0,
-          "max": 7200,
+          "max": 93600,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -228,11 +228,11 @@
               },
               {
                 "color": "orange",
-                "value": 3600
+                "value": 86400
               },
               {
                 "color": "red",
-                "value": 7200
+                "value": 93600
               }
             ]
           }
