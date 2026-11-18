@@ -66,7 +66,7 @@ Every metric has `env` and `code_location` labels.
 | `dagster_asset_age_seconds` | `asset`, `group` | every interval |
 | `dagster_asset_last_materialized_timestamp_seconds` | `asset`, `group` | every interval |
 | `dagster_asset_row_count` | `asset`, `group` | every interval, if the asset records `dagster/row_count` |
-| `dagster_asset_check_passed` | `asset`, `check` | every interval, per completed check (1 or 0) |
+| `dagster_asset_check_passed` | `asset`, `check` | every interval, per completed check (1 or 0; 0 if it crashed) |
 
 Pushing never raises. If VictoriaMetrics is down, a warning is logged and that
 sample is dropped.
