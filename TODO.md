@@ -62,16 +62,6 @@ broken pipeline goes unnoticed until someone opens Grafana.
 - [ ] Point vmalert at it: replace `-notifier.blackhole` with `-notifier.url`.
 - [ ] Add Alertmanager as a Grafana data source so alerts and silences show there.
 
-## Add linting to `just ci`
-
-`just ci` (run by `.github/workflows/ci.yml`) checks definitions, tests, coverage and
-formatting of the justfile and OpenTofu, but no Python lint yet.
-
-- [x] Add a `ci` recipe that runs `just --fmt --check`, `dg check defs`, `pytest`,
-      a dbt parse (`just defs-state`), and the OpenTofu checks.
-- [ ] Add `ruff` to the dev dependencies, configure it in `pyproject.toml` and run it
-      in `just ci`.
-
 ## Add project-level tests
 
 The top-level `tests/` folder is empty.

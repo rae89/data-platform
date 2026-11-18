@@ -19,8 +19,19 @@ CATALOG = {
             "url": "http://localhost:3000",
             "public": "dagster",
         },
-        {"name": "dlt dashboard", "group": "Orchestration", "description": "local", "url": "http://localhost:2718"},
-        {"name": "Landing page", "group": "Links", "description": "this page", "url": "https://x", "public": ""},
+        {
+            "name": "dlt dashboard",
+            "group": "Orchestration",
+            "description": "local",
+            "url": "http://localhost:2718",
+        },
+        {
+            "name": "Landing page",
+            "group": "Links",
+            "description": "this page",
+            "url": "https://x",
+            "public": "",
+        },
     ]
 }
 TEMPLATE = '<a href="$sign_in_url">Sign in</a><ul>$components</ul>'

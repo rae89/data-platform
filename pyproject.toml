@@ -24,6 +24,7 @@ dev = [
     "dagster-webserver",
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
+    "ruff>=0.17.5",
 ]
 
 [build-system]
@@ -60,3 +61,12 @@ branch = true
 show_missing = true
 fail_under = 99
 skip_covered = true
+
+[tool.ruff]
+line-length = 110
+# Code in docs and plans is illustrative, not run.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, import order, bugbear, pyupgrade, simplify
+select = ["E", "W", "F", "I", "B", "UP", "SIM"]

@@ -24,7 +24,8 @@ just check           # validate definitions and component YAML (uv run dg check 
 just defs-state      # re-parse dbt after changing models
 just test            # tests (extra args go to pytest, e.g. just test -k sensor)
 just cov             # tests with coverage, fails below 99%
-just ci              # every check CI runs (defs, tests, just and OpenTofu formatting)
+just lint            # ruff lint and format check (fix with uv run ruff check --fix . && uv run ruff format .)
+just ci              # every check CI runs (lint, defs, tests, just and OpenTofu formatting)
 just update          # on the server: pull CI-built images for main's commit and restart
 just dlt-dashboard   # dlt pipeline dashboard (schema, state, loads), :2718
 just portal          # render the portal landing page from portal/catalog.yaml

@@ -34,7 +34,9 @@ def test_dashboard_bundle_references_resolve():
     assert all(c["dataset_uuid"] in datasets for c in charts.values())
     placed = []
     for dash in load_assets("dashboards"):
-        slots = [v["meta"] for v in dash["position"].values() if isinstance(v, dict) and v.get("type") == "CHART"]
+        slots = [
+            v["meta"] for v in dash["position"].values() if isinstance(v, dict) and v.get("type") == "CHART"
+        ]
         assert all(m.get("uuid") in charts for m in slots), dash["dashboard_title"]
         assert all(m["sliceName"] == charts[m["uuid"]]["slice_name"] for m in slots)
         placed += [m["uuid"] for m in slots]

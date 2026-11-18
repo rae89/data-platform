@@ -1,6 +1,5 @@
 import dagster as dg
 from dagster._core.definitions.asset_checks.asset_check_evaluation import AssetCheckEvaluationPlanned
-
 from dagster_victoria_sli import MetricsPusher, build_sli_sensors
 
 
@@ -61,16 +60,13 @@ def failing_check() -> dg.AssetCheckResult:
     return dg.AssetCheckResult(passed=False)
 
 
-
 observable = dg.AssetSpec("observable", group_name="external")  # external asset
 
 
 def test_asset_sli_reports_checks_and_observations():
     pusher = make_pusher()
     sensors = {s.name: s for s in build_sli_sensors(pusher)}
-    defs = dg.Definitions(
-        assets=[checked_asset, observable], asset_checks=[passing_check, failing_check]
-    )
+    defs = dg.Definitions(assets=[checked_asset, observable], asset_checks=[passing_check, failing_check])
 
     with dg.instance_for_test() as instance:
         dg.materialize([checked_asset, passing_check, failing_check], instance=instance)
@@ -139,7 +135,6 @@ def test_pusher_adds_common_labels():
 
 def test_scaffolded_component_loads(monkeypatch):
     from dagster.components.testing import create_defs_folder_sandbox
-
     from dagster_victoria_sli import SliSensorsComponent
 
     monkeypatch.delenv("VICTORIA_METRICS_URL", raising=False)
@@ -184,7 +179,11 @@ def check_samples(instance, defs):
     sensors = {s.name: s for s in build_sli_sensors(pusher)}
     context = dg.build_sensor_context(instance=instance, repository_def=defs.get_repository_def())
     sensors["asset_sli"](context)
-    return {labels["check"]: value for name, labels, value in pusher.pushed if name == "dagster_asset_check_passed"}
+    return {
+        labels["check"]: value
+        for name, labels, value in pusher.pushed
+        if name == "dagster_asset_check_passed"
+    }
 
 
 def test_crashed_check_is_not_reported_as_passing():

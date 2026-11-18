@@ -60,15 +60,20 @@ def test_pages_then_loads_incrementally_with_lookback(tmp_path, monkeypatch):
 
     with duckdb.connect(str(tmp_path / "w.duckdb"), read_only=True) as conn:
         rows = conn.execute("select date, portcalls from portwatch.daily_ports order by date").fetchall()
-        columns = {r[0] for r in conn.execute(
-            "select column_name from information_schema.columns where table_name = 'daily_ports'"
-        ).fetchall()}
+        columns = {
+            r[0]
+            for r in conn.execute(
+                "select column_name from information_schema.columns where table_name = 'daily_ports'"
+            ).fetchall()
+        }
     assert rows == [("2026-10-01", 1), ("2026-10-02", 1), ("2026-10-20", 5), ("2026-10-21", 1)]
     assert "objectid" not in columns  # ArcGIS's internal row id is dropped
 
 
 def test_api_errors_fail_the_load(tmp_path, monkeypatch):
-    monkeypatch.setattr(loads.requests, "get", lambda url, params, timeout: FakeResponse({"error": {"code": 400}}))
+    monkeypatch.setattr(
+        loads.requests, "get", lambda url, params, timeout: FakeResponse({"error": {"code": 400}})
+    )
     with pytest.raises(Exception, match="PortWatch API error"):
         run_pipeline = dlt.pipeline(
             "portwatch_err",
@@ -87,8 +92,12 @@ def test_no_new_days_keeps_the_cursor(tmp_path, monkeypatch):
 
 def test_a_newly_added_port_backfills_from_the_start(tmp_path, monkeypatch):
     run(tmp_path, monkeypatch, [[day("2026-10-20")]])
-    calls = run(tmp_path, monkeypatch, [[], [{**day("2026-10-21"), "portid": "port815"}]],
-                ports={"port664": "LA-LB", "port815": "NY-NJ"})
+    calls = run(
+        tmp_path,
+        monkeypatch,
+        [[], [{**day("2026-10-21"), "portid": "port815"}]],
+        ports={"port664": "LA-LB", "port815": "NY-NJ"},
+    )
     assert "portid = 'port664' AND date >= '2026-10-06'" in calls[0]["where"]  # lookback
     assert "portid = 'port815' AND date >= '2019-01-01'" in calls[1]["where"]  # full history
 
@@ -97,8 +106,12 @@ def test_chokepoints_load_all_chokepoints_incrementally(tmp_path, monkeypatch):
     def transit(d, cp="chokepoint2", n=1):
         return {"portid": cp, "portname": cp, "date": d, "n_total": n}
 
-    first = run(tmp_path, monkeypatch, [[transit("2026-10-20"), transit("2026-10-20", "chokepoint1")]],
-                table="daily_chokepoints")
+    first = run(
+        tmp_path,
+        monkeypatch,
+        [[transit("2026-10-20"), transit("2026-10-20", "chokepoint1")]],
+        table="daily_chokepoints",
+    )
     assert first[0]["url"] == loads.CHOKEPOINTS_URL
     assert first[0]["where"] == "date >= '2019-01-01'"  # every chokepoint, full history
     second = run(tmp_path, monkeypatch, [[transit("2026-10-20", n=5)]], table="daily_chokepoints")
