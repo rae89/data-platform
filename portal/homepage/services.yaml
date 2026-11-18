@@ -4,10 +4,10 @@
       href: http://localhost:3000
       description: Assets, runs, schedules and sensors
       icon: dagster.png
-      siteMonitor: http://host.docker.internal:3000/server_info
+      siteMonitor: '{{HOMEPAGE_VAR_DAGSTER_URL}}/server_info'
       widgets:
       - type: customapi
-        url: http://host.docker.internal:3000/graphql
+        url: '{{HOMEPAGE_VAR_DAGSTER_URL}}/graphql'
         method: POST
         headers:
           Content-Type: application/json

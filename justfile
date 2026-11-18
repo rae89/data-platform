@@ -27,6 +27,8 @@ infra:
 # Run Dagster locally with hot reload (stops the dagster container first)
 dev: infra
     docker compose stop dagster
+    # The portal checks Dagster on the host instead of the container (`just up` switches back).
+    PORTAL_DAGSTER_URL=http://host.docker.internal:3000 docker compose up -d portal
     uv run dg dev
 
 # Validate component YAML and definitions

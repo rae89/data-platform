@@ -18,13 +18,14 @@ components:
     description: Assets, runs, schedules and sensors
     url: http://localhost:3000
     public: dagster
-    # host.docker.internal reaches Dagster both in Docker (just up) and on the host (just dev).
-    health: http://host.docker.internal:3000/server_info
+    # HOMEPAGE_VAR_DAGSTER_URL (docker-compose.yml): the dagster container, or the host
+    # during `just dev`.
+    health: '{{HOMEPAGE_VAR_DAGSTER_URL}}/server_info'
     icon: dagster.png
     homepage:
       widgets:
         - type: customapi
-          url: http://host.docker.internal:3000/graphql
+          url: '{{HOMEPAGE_VAR_DAGSTER_URL}}/graphql'
           method: POST
           headers:
             Content-Type: application/json

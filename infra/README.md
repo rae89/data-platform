@@ -16,7 +16,8 @@ security group opens no ports. Ways in:
 3. Wait about 3 minutes, then open a shell with the `ssm_shell` output command and run
    `sudo -iu ubuntu` (that user can run Docker).
 4. Clone the repo, `git clone https://github.com/rae89/data-platform.git`, and copy
-   `.env.example` to `.env`, filling in the secrets and `PLATFORM_ENV=prod`.
+   `.env.example` to `.env`, filling in the secrets, `PLATFORM_ENV=prod` and
+   `SUPERSET_RESTART=unless-stopped`.
 5. Run `just update`: it pulls the images CI built for the `main` commit
    (`ghcr.io/rae89/data-platform-*:sha-<commit>`) and starts everything, without
    building on the server.
@@ -25,7 +26,8 @@ security group opens no ports. Ways in:
 To open a service, run the `port_forward` output command on your laptop and keep it
 running: http://localhost:3002 is the portal. For Dagster, change both port numbers to
 3000; Grafana 3001, Superset 8088. Portal links to other services work for the ports
-you forward.
+you forward. Every service listens on the instance's `127.0.0.1` only; cloudflared and
+port forwarding connect there.
 
 Boot problems: `/var/log/cloud-init-output.log` on the instance.
 

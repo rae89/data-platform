@@ -28,11 +28,15 @@ Start at the portal: one landing page linking every component, with status and l
 | VictoriaLogs     | http://localhost:9428/select/vmui |
 | vmalert          | http://localhost:8880  |
 
+Every port listens on `127.0.0.1` only, so other machines on your network can't reach
+these services. Logs rotate at 3 files of 10 MB per service (`docker compose logs`).
+
 The `ingest_sources` job runs daily at 06:30 UTC. To run it now, open Dagster, go to
 Jobs → ingest_sources → Materialize all.
 
 For local development with hot reload, run `just dev` (`dg dev`). It runs Dagster
-on your machine against the same Victoria stack and the same DuckDB file.
+on your machine against the same Victoria stack and the same DuckDB file, and points
+the portal's Dagster tile at it; `just up` points it back at the container.
 
 ## Screenshots
 
