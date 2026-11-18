@@ -7,5 +7,18 @@ python_logs:
         class: dagster_victoria_sli.logs.VictoriaLogsHandler
         level: DEBUG
 
+# Run monitoring (dagster-daemon). `dg dev` uses the default run launcher, which can't
+# check run worker health, so a run whose process died (spot interruption, container
+# restart) stays STARTED until max_runtime_seconds, then is marked failed. Raise it if
+# a job legitimately runs longer (Grafana: dagster_run_duration_seconds), or set the
+# `dagster/max_runtime` tag on that job. Keep this block identical in both dagster.yaml.
+run_monitoring:
+  enabled: true
+  start_timeout_seconds: 300  # NOT_STARTED/STARTING longer than this: failed
+  cancel_timeout_seconds: 300  # CANCELING longer than this: canceled
+  max_runtime_seconds: 3600  # STARTED longer than this: terminated and failed
+  max_resume_run_attempts: 0  # the default launcher can't resume runs
+  poll_interval_seconds: 60
+
 telemetry:
   enabled: false

@@ -141,6 +141,9 @@ same name in `portal/catalog.yaml`, then `tofu apply` and `just portal`.
   Superset its own `admin` login; the services don't check the Access token.
 - **Spot, persistent, stop on interruption.** The disk survives and the instance comes
   back when capacity returns. Set `spot = false` for on-demand (about $56/month).
+  A run cut off by the interruption stays STARTED until 1 hour after it began, then
+  run monitoring marks it failed (`run_monitoring` in `docker/dagster.yaml`). Until
+  then it also holds back deploys, which wait for running runs.
 - **ARM by default.** For x86, set `instance_type = "t3a.large"`; the AMI follows.
 - **Local state** (`infra/terraform.tfstate`, gitignored) holds the tunnel token and the
   Google client secret. Keep it private; move it to an encrypted S3 backend before
