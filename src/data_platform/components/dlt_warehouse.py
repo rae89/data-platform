@@ -20,9 +20,9 @@ their own. Unnest JSON columns in dbt staging instead.
 from pathlib import Path
 
 import dagster as dg
+import dagster_dlt  # module import: keeps the base class out of `dg list components`
 import dlt
 from dagster.components.component_scaffolding import scaffold_component
-import dagster_dlt  # module import: keeps the base class out of `dg list components`
 
 from data_platform.defs.resources import DUCKDB_PATH
 
@@ -64,9 +64,7 @@ class DltWarehouseLoadsScaffolder(dg.Scaffolder):
     """Writes defs.yaml and a loads.py template for a new source."""
 
     def scaffold(self, request: dg.ScaffoldRequest) -> None:
-        scaffold_component(
-            request, {"loads": [{"source": ".loads.source", "pipeline": ".loads.pipeline"}]}
-        )
+        scaffold_component(request, {"loads": [{"source": ".loads.source", "pipeline": ".loads.pipeline"}]})
         name = request.target_path.name
         (request.target_path / "loads.py").write_text(LOADS_TEMPLATE.format(name=name))
 

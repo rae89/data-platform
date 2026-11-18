@@ -14,6 +14,7 @@ The URL and env label default to $VICTORIA_LOGS_URL and $PLATFORM_ENV.
 """
 
 import atexit
+import contextlib
 import json
 import logging
 import os
@@ -22,7 +23,6 @@ import threading
 from datetime import datetime, timezone
 
 import requests
-
 
 # Fields VictoriaLogs uses to group log lines into streams. Keep these low-cardinality.
 STREAM_FIELDS = "service,env,job"
@@ -48,10 +48,8 @@ class _Sender:
         atexit.register(self.close)
 
     def put(self, entry: dict) -> None:
-        try:
+        with contextlib.suppress(queue.Full):  # Drop rather than block the pipeline.
             self._queue.put_nowait(entry)
-        except queue.Full:
-            pass  # Drop rather than block the pipeline.
 
     def _run(self) -> None:
         stop = False
@@ -74,15 +72,13 @@ class _Sender:
 
     def _send(self, batch: list[dict]) -> None:
         body = "\n".join(json.dumps(e, default=str) for e in batch)
-        try:
+        with contextlib.suppress(requests.RequestException):  # VictoriaLogs being down must not affect runs.
             self._session.post(
                 self.endpoint,
                 params={"_stream_fields": STREAM_FIELDS},
                 data=body.encode(),
                 timeout=5,
             )
-        except requests.RequestException:
-            pass  # VictoriaLogs being down must not affect runs.
 
     def close(self) -> None:
         """Flush what's queued and stop. Runs at process exit."""

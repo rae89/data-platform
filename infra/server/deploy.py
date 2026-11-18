@@ -45,9 +45,7 @@ def log(message: str) -> None:
 
 def active_runs(dagster_url: str) -> int | None:
     """Number of Dagster runs in progress, or None when Dagster can't be asked."""
-    body = json.dumps(
-        {"query": RUNS_QUERY, "variables": {"statuses": list(ACTIVE_STATUSES)}}
-    ).encode()
+    body = json.dumps({"query": RUNS_QUERY, "variables": {"statuses": list(ACTIVE_STATUSES)}}).encode()
     request = urllib.request.Request(
         f"{dagster_url}/graphql",
         data=body,
@@ -87,9 +85,7 @@ def wait_until_idle(args: argparse.Namespace, sleep) -> int | None:
         failures = failures + 1 if runs is None else 0
         if runs == 0 or failures >= DOWN_AFTER or time.monotonic() >= deadline:
             return runs
-        log(
-            "Dagster didn't answer" if runs is None else f"{runs} Dagster run(s) in progress"
-        )
+        log("Dagster didn't answer" if runs is None else f"{runs} Dagster run(s) in progress")
         sleep(args.poll_seconds)
 
 

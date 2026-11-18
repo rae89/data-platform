@@ -41,8 +41,13 @@ test *args:
 cov *args:
     uv run pytest packages/dagster-victoria-sli/tests tests --cov {{ args }}
 
+# Lint and check formatting of the Python code (ruff, configured in pyproject.toml)
+lint:
+    uv run ruff check .
+    uv run ruff format --check .
+
 # Every check CI runs (.github/workflows/ci.yml); needs uv and OpenTofu
-ci: defs-state check cov
+ci: lint defs-state check cov
     {{ just_executable() }} --fmt --check
     tofu -chdir=infra fmt -check
     tofu -chdir=infra init -backend=false -input=false > /dev/null

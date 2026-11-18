@@ -195,7 +195,7 @@
       "id": 3,
       "type": "stat",
       "title": "Oldest asset",
-      "description": "Time since the least recently refreshed asset was materialized. SLO 2h.",
+      "description": "Hours since the least recently refreshed asset was materialized. SLO 26h.",
       "datasource": {
         "type": "prometheus",
         "uid": "victoriametrics"
@@ -213,14 +213,14 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "max(dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}) / 60",
+          "expr": "max(dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}) / 3600",
           "legendFormat": "",
           "range": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "m",
+          "unit": "h",
           "decimals": 0,
           "color": {
             "mode": "thresholds"
@@ -234,15 +234,15 @@
               },
               {
                 "color": "yellow",
-                "value": 60
+                "value": 24
               },
               {
                 "color": "orange",
-                "value": 90
+                "value": 25
               },
               {
                 "color": "red",
-                "value": 120
+                "value": 26
               }
             ]
           },
@@ -552,8 +552,8 @@
     {
       "id": 9,
       "type": "status-history",
-      "title": "Asset age heatmap (SLO 2h)",
-      "description": "One row per asset, one cell per time slot, colored by the oldest the asset got in that slot. Green < 1h, yellow 1-1.5h, orange 1.5-2h, red past the 2h SLO.",
+      "title": "Asset age heatmap (SLO 26h)",
+      "description": "One row per asset, one cell per time slot, colored by the oldest the asset got in that slot. Green < 24h (one daily load), yellow 24-25h, orange 25-26h, red past the 26h SLO.",
       "datasource": {
         "type": "prometheus",
         "uid": "victoriametrics"
@@ -571,7 +571,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "max by (asset) (max_over_time(dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}[$__interval])) / 60",
+          "expr": "max by (asset) (max_over_time(dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}[$__interval])) / 3600",
           "legendFormat": "{{asset}}",
           "range": true
         }
@@ -579,7 +579,7 @@
       "maxDataPoints": 300,
       "fieldConfig": {
         "defaults": {
-          "unit": "m",
+          "unit": "h",
           "decimals": 0,
           "color": {
             "mode": "thresholds"
@@ -593,15 +593,15 @@
               },
               {
                 "color": "yellow",
-                "value": 60
+                "value": 24
               },
               {
                 "color": "orange",
-                "value": 90
+                "value": 25
               },
               {
                 "color": "red",
-                "value": 120
+                "value": 26
               }
             ]
           },
@@ -633,7 +633,7 @@
       "id": 10,
       "type": "bargauge",
       "title": "Current age",
-      "description": "Minutes since each asset was last materialized.",
+      "description": "Hours since each asset was last materialized.",
       "datasource": {
         "type": "prometheus",
         "uid": "victoriametrics"
@@ -651,7 +651,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "sort_desc(max by (asset) (dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}) / 60)",
+          "expr": "sort_desc(max by (asset) (dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}) / 3600)",
           "legendFormat": "{{asset}}",
           "instant": true,
           "range": false
@@ -659,10 +659,10 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "m",
+          "unit": "h",
           "decimals": 0,
           "min": 0,
-          "max": 180,
+          "max": 30,
           "color": {
             "mode": "thresholds"
           },
@@ -675,15 +675,15 @@
               },
               {
                 "color": "yellow",
-                "value": 60
+                "value": 24
               },
               {
                 "color": "orange",
-                "value": 90
+                "value": 25
               },
               {
                 "color": "red",
-                "value": 120
+                "value": 26
               }
             ]
           }
@@ -710,7 +710,7 @@
       "id": 11,
       "type": "timeseries",
       "title": "Asset age over time",
-      "description": "Minutes since each asset was last materialized. Drops to zero on every refresh; the dashed red line is the 2h SLO.",
+      "description": "Hours since each asset was last materialized. Drops to zero on every refresh; the dashed red line is the 26h SLO.",
       "datasource": {
         "type": "prometheus",
         "uid": "victoriametrics"
@@ -728,14 +728,14 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "max by (asset) (dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}) / 60",
+          "expr": "max by (asset) (dagster_asset_age_seconds{env=~\"$env\", code_location=~\"$code_location\", group=~\"$group\"}) / 3600",
           "legendFormat": "{{asset}}",
           "range": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "m",
+          "unit": "h",
           "color": {
             "mode": "palette-classic"
           },
@@ -765,7 +765,7 @@
               },
               {
                 "color": "red",
-                "value": 120
+                "value": 26
               }
             ]
           },

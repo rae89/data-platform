@@ -8,7 +8,7 @@ from dagster.components.testing import create_defs_folder_sandbox
 
 from data_platform.components import DltWarehouseLoads, warehouse_pipeline
 
-LOCAL_SOURCE = '''
+LOCAL_SOURCE = """
 import dlt
 
 @dlt.resource(name="items", primary_key="id", write_disposition="merge")
@@ -27,7 +27,7 @@ pipeline = dlt.pipeline(
     dataset_name="demo",
     pipelines_dir=r"{state}",
 )
-'''
+"""
 
 
 def test_new_source_scaffolds_and_loads_into_duckdb(tmp_path):
@@ -56,17 +56,18 @@ def test_new_source_scaffolds_and_loads_into_duckdb(tmp_path):
             assert spec.group_name == "source" and not spec.deps  # loaded by the daily job
 
             with dg.instance_for_test() as instance:
-                result = dg.materialize(
-                    list(defs.assets), instance=instance, resources=defs.resources or {}
-                )
+                result = dg.materialize(list(defs.assets), instance=instance, resources=defs.resources or {})
             event = result.get_asset_materialization_events()[0]
             meta = event.event_specific_data.materialization.metadata
             assert meta["dagster/row_count"].value == 2  # exported by the SLI sensors
 
     with duckdb.connect(str(db), read_only=True) as conn:
-        tables = {r[0] for r in conn.execute(
-            "select table_name from information_schema.tables where table_schema = 'demo'"
-        ).fetchall()}
+        tables = {
+            r[0]
+            for r in conn.execute(
+                "select table_name from information_schema.tables where table_schema = 'demo'"
+            ).fetchall()
+        }
     assert "items" in tables and "items__tags" not in tables  # one table per resource
 
 
@@ -77,11 +78,11 @@ def test_loads_go_through_jsonl_files(tmp_path):
     with create_defs_folder_sandbox(project_name="jsonl_project") as sandbox:
         defs_path = sandbox.scaffold_component(component_cls=DltWarehouseLoads)
         (defs_path / "loads.py").write_text(LOCAL_SOURCE.format(db=db, state=tmp_path / ".dlt"))
-        with sandbox.load_component_and_build_defs(defs_path=defs_path) as (_, defs):
-            with dg.instance_for_test() as instance:
-                result = dg.materialize(
-                    list(defs.assets), instance=instance, resources=defs.resources or {}
-                )
+        with (
+            sandbox.load_component_and_build_defs(defs_path=defs_path) as (_, defs),
+            dg.instance_for_test() as instance,
+        ):
+            result = dg.materialize(list(defs.assets), instance=instance, resources=defs.resources or {})
     assert result.success
     loaded = [p.name for p in (tmp_path / ".dlt").rglob("items.*") if "completed_jobs" in str(p)]
     # The data arrives as jsonl; the .sql job is dlt's merge step.
@@ -107,8 +108,10 @@ def test_row_count_failure_is_logged_not_raised(tmp_path):
     from data_platform.components.dlt_warehouse import _row_count
 
     pipeline = dlt.pipeline(
-        "empty", destination=dlt.destinations.duckdb(str(tmp_path / "e.duckdb")),
-        dataset_name="empty", pipelines_dir=str(tmp_path / ".dlt"),
+        "empty",
+        destination=dlt.destinations.duckdb(str(tmp_path / "e.duckdb")),
+        dataset_name="empty",
+        pipelines_dir=str(tmp_path / ".dlt"),
     )
     logged = []
     context = type("Ctx", (), {"log": type("Log", (), {"warning": lambda self, m: logged.append(m)})()})()

@@ -5,7 +5,6 @@ import time
 import dagster as dg
 import pytest
 import requests
-
 from dagster_victoria_sli import logs
 from dagster_victoria_sli.logs import STREAM_FIELDS, VictoriaLogsHandler, _Sender
 

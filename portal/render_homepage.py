@@ -48,7 +48,9 @@ def base_service(entry: dict, public_url: str | None = None) -> dict:
     if public_url and "public" in entry:
         # Public deploy (infra/public.tf): same path on the service's public hostname.
         parts = urlsplit(href)
-        href = public_url.format(name=entry["public"]) + parts.path + (f"?{parts.query}" if parts.query else "")
+        href = (
+            public_url.format(name=entry["public"]) + parts.path + (f"?{parts.query}" if parts.query else "")
+        )
         if not entry["public"]:  # "" is the domain itself (the landing page): drop the first label
             host = urlsplit(public_url.format(name="x")).netloc.split(".", 1)[1]
             href = f"https://{host}/"

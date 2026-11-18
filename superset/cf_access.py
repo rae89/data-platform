@@ -32,9 +32,7 @@ class CloudflareAccessMiddleware:
             return None
         try:
             key = self.jwks.get_signing_key_from_jwt(token).key
-            claims = jwt.decode(
-                token, key, algorithms=["RS256"], audience=self.audience, issuer=self.issuer
-            )
+            claims = jwt.decode(token, key, algorithms=["RS256"], audience=self.audience, issuer=self.issuer)
         except jwt.PyJWTError:  # bad signature, expired, another app's token, keys unreachable
             return None
         return claims.get("email") or None

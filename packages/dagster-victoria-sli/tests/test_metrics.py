@@ -1,9 +1,7 @@
 import logging
 
 import requests
-
-from dagster_victoria_sli import MetricsPusher
-from dagster_victoria_sli import metrics
+from dagster_victoria_sli import MetricsPusher, metrics
 
 
 class FakeResponse:

@@ -13,7 +13,8 @@ Every `interval_seconds`, for every asset in the code location:
   dagster_asset_age_seconds{asset,group}                         seconds since its last materialization
   dagster_asset_last_materialized_timestamp_seconds{asset,group} when that was (unix time)
   dagster_asset_row_count{asset,group}                           rows at its last materialization
-  dagster_asset_check_passed{asset,check}                        1 or 0 per check (dbt tests)
+  dagster_asset_check_passed{asset,check}                        1 or 0 per check (dbt tests); 0 if it
+                                                                 crashed (no result once its run ended)
 """
 
 import time
@@ -83,11 +84,19 @@ def build_sli_sensors(pusher: MetricsPusher, interval_seconds: int = 60) -> list
         checks = context.instance.event_log_storage.get_latest_asset_check_execution_by_key(
             list(graph.asset_check_keys)
         )
+        # A check that crashed never records a result: its record stays PLANNED. Once
+        # its run has finished, report it as failing so it doesn't drop off dashboards.
+        planned_runs = [r.run_id for r in checks.values() if r.status.value == "PLANNED"]
+        running = set()
+        if planned_runs:  # an empty filter would load every run
+            runs = context.instance.get_runs(dg.RunsFilter(run_ids=planned_runs))
+            running = {run.run_id for run in runs if not run.is_finished}
         for key, record in checks.items():
-            if record.status.value in ("SUCCEEDED", "FAILED"):
-                labels = {"asset": key.asset_key.to_user_string(), "check": key.name}
-                passed = int(record.status.value == "SUCCEEDED")
-                samples.append(("dagster_asset_check_passed", labels, passed))
+            if record.status.value == "PLANNED" and record.run_id in running:
+                continue
+            labels = {"asset": key.asset_key.to_user_string(), "check": key.name}
+            passed = int(record.status.value == "SUCCEEDED")
+            samples.append(("dagster_asset_check_passed", labels, passed))
 
         pusher.push(samples)
         return dg.SkipReason(f"Pushed {len(samples)} SLI samples for {len(keys)} assets")

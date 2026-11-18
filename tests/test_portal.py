@@ -37,7 +37,12 @@ def test_render_groups_services_and_maps_fields():
         )
     )
     assert rendered == [
-        {"G1": [{"A": {"href": "http://a", "description": "a"}}, {"C": {"href": "http://c", "description": "c"}}]},
+        {
+            "G1": [
+                {"A": {"href": "http://a", "description": "a"}},
+                {"C": {"href": "http://c", "description": "c"}},
+            ]
+        },
         {
             "G2": [
                 {
@@ -112,13 +117,24 @@ def test_unknown_feed_type_fails_loudly():
         render_homepage.feed_widget({"type": "rss2"})
 
 
-
 def test_public_url_keeps_path_and_query_and_skips_local_only_entries():
     entries = {
         "components": [
-            {"name": "VM", "group": "G", "description": "", "url": "http://localhost:8428/vmui?x=1", "public": "victoriametrics"},
+            {
+                "name": "VM",
+                "group": "G",
+                "description": "",
+                "url": "http://localhost:8428/vmui?x=1",
+                "public": "victoriametrics",
+            },
             {"name": "dlt", "group": "G", "description": "", "url": "http://localhost:2718"},
-            {"name": "Landing", "group": "G", "description": "", "url": "https://github.com/o/r", "public": ""},
+            {
+                "name": "Landing",
+                "group": "G",
+                "description": "",
+                "url": "https://github.com/o/r",
+                "public": "",
+            },
         ]
     }
     rendered = yaml.safe_load(render_homepage.render(entries, "https://dp-{name}.example.com"))
