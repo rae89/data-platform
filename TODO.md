@@ -111,26 +111,6 @@ predate the rule.
       start it, following "Writing PRs and docs" in `AGENTS.md`.
 - [ ] Do the same for `packages/dagster-victoria-sli/README.md`.
 
-## Report crashed asset checks as failing
-
-A check that raises an exception keeps a `PLANNED` record, and `asset_sli` only
-exports `SUCCEEDED` and `FAILED`, so the check drops off the dashboard instead of
-showing as failing. The run failure SLI still fires.
-
-- [ ] In `packages/dagster-victoria-sli/src/dagster_victoria_sli/sensors.py`, export
-      `PLANNED` checks whose run has finished as failed (`dagster_asset_check_passed 0`).
-- [ ] Update `test_crashed_check_is_not_reported_as_passing` to expect 0.
-
-
-## Daily freshness thresholds in Grafana
-
-Every asset loads daily (alert `AssetStale`, 26h), but the Grafana
-"Asset age" panel and the freshness heatmap still color everything against 2h, so
-assets show as stale most of the day.
-
-- [ ] In `grafana/dashboards/data-platform-slis.json` and
-      `dagster-asset-freshness.json`, use a 26h threshold.
-
 ## Port filter on "Trade trends" before adding a second port
 
 `port_monthly_trade` stores year-over-year change per port, and the "Change vs. a year
