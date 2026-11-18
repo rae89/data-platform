@@ -5,10 +5,16 @@
 `tofu apply` creates the host, but the repo is deployed by hand and an
 interrupted spot instance can leave Dagster in a bad state.
 
-- [ ] Enable `run_monitoring` in `docker/dagster.yaml`, so a run killed by a spot
+- [x] Enable `run_monitoring` in `docker/dagster.yaml`, so a run killed by a spot
       interruption is marked failed instead of staying "STARTED".
-- [ ] Check what comes back after `aws ec2 stop-instances` / `start-instances`; switch
-      services on `restart: on-failure:3` to `unless-stopped` if they stay down.
+- [ ] Mark runs left STARTED as failed when the Dagster container starts, instead of
+      after `max_runtime_seconds` (1 hour): with one container and the default run
+      launcher, any run STARTED at startup lost its process. Run monitoring can't
+      tell sooner because the default launcher has no worker health check.
+- [x] Switch Superset, the only service on `restart: on-failure:3`, to `unless-stopped`
+      on the server (`SUPERSET_RESTART` in `.env`).
+- [ ] Check on the instance that every service comes back after
+      `aws ec2 stop-instances` / `start-instances`, healthy.
 - [ ] Automate steps 4 and 5 of `infra/README.md` (clone with a read-only deploy key
       from SSM, write `.env` from SSM, `just update`).
 - [ ] Move OpenTofu state to an S3 backend.

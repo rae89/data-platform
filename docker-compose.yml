@@ -1,5 +1,14 @@
 name: data-platform
 
+# Every service: rotate Docker's logs (3 files of 10 MB), so they can't fill the disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+# Ports bind to 127.0.0.1 only: the server is reached through cloudflared and SSM port
+# forwarding, both on localhost. Containers talk over the compose network instead.
 services:
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.155.0
@@ -9,10 +18,16 @@ services:
       - -httpListenAddr=:8428
       # Dashboards shown in vmui's Dashboards tab (vmui/dashboards/*.json).
       - -vmui.customDashboardsPath=/vmui-dashboards
-    ports: ["8428:8428"]
+    ports: ["127.0.0.1:8428:8428"]
     volumes:
       - vm-data:/storage
       - ./vmui/dashboards:/vmui-dashboards:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8428/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
     restart: unless-stopped
 
   victorialogs:
@@ -21,8 +36,10 @@ services:
       - -storageDataPath=/vlogs
       - -retentionPeriod=30d
       - -httpListenAddr=:9428
-    ports: ["9428:9428"]
+    ports: ["127.0.0.1:9428:9428"]
     volumes: ["vl-data:/vlogs"]
+    # No healthcheck: the image has no shell, wget or curl to run one.
+    logging: *logging
     restart: unless-stopped
 
   # Evaluates SLO recording and alerting rules (vmalert/rules.yml).
@@ -36,9 +53,15 @@ services:
       - -remoteRead.url=http://victoriametrics:8428
       - -notifier.blackhole
       - -evaluationInterval=1m
-    ports: ["8880:8880"]
+    ports: ["127.0.0.1:8880:8880"]
     volumes: ["./vmalert:/rules:ro"]
     depends_on: [victoriametrics]
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8880/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
     restart: unless-stopped
 
   grafana:
@@ -48,12 +71,19 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/data-platform-slis.json
-    ports: ["3001:3000"]
+    ports: ["127.0.0.1:3001:3000"]
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on: [victoriametrics, victorialogs]
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s  # installs the VictoriaLogs plugin on first start
+    logging: *logging
     restart: unless-stopped
 
   dagster:
@@ -65,11 +95,22 @@ services:
       VICTORIA_METRICS_URL: http://victoriametrics:8428
       VICTORIA_LOGS_URL: http://victorialogs:9428
       PLATFORM_ENV: ${PLATFORM_ENV:-local}
-    ports: ["3000:3000"]
+    ports: ["127.0.0.1:3000:3000"]
     volumes:
       - ./data:/data                          # DuckDB warehouse, shared with your host
       - dagster-storage:/opt/dagster/storage  # run history, schedules, compute logs
     depends_on: [victoriametrics, victorialogs]
+    healthcheck:  # the image has python, no wget or curl
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/server_info', timeout=5)
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s  # loading the code location takes a while
+    logging: *logging
     restart: unless-stopped
 
   # BI dashboards on the dbt marts (superset/). Reads data/bi.duckdb, a snapshot the
@@ -86,12 +127,16 @@ services:
       CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:-}
       CF_ACCESS_AUD: ${CF_ACCESS_AUD:-}
       SUPERSET_ADMIN_EMAILS: ${SUPERSET_ADMIN_EMAILS:-}
-    ports: ["8088:8088"]
+    ports: ["127.0.0.1:8088:8088"]
     volumes:
       - ./data:/data:ro
       - superset-home:/app/superset_home  # metadata: users, charts, dashboards
-    # Don't restart forever when secrets are missing; other services are unaffected.
-    restart: on-failure:3
+    # Healthcheck: the image's own (/health).
+    logging: *logging
+    # Locally, don't restart forever when secrets are missing; other services are
+    # unaffected. The server sets SUPERSET_RESTART=unless-stopped in .env, so Superset
+    # also comes back after the instance stops and starts.
+    restart: ${SUPERSET_RESTART:-on-failure:3}
 
   # Landing page linking every component. Generic name so the tool behind it can be
   # swapped: services come from portal/catalog.yaml (`just portal` renders them).
@@ -105,10 +150,16 @@ services:
       HOMEPAGE_VAR_GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       # `env` label the SLI widgets filter on (same default as the dagster service).
       HOMEPAGE_VAR_PLATFORM_ENV: ${PLATFORM_ENV:-local}
-    # Reaches Dagster on the host during `just dev` (needed on Linux; built in on Docker Desktop).
+      # Where the Dagster tile checks Dagster: its container, or the host during `just dev`
+      # (it sets http://host.docker.internal:3000). Linux Docker can't reach a port bound
+      # to 127.0.0.1 through host.docker.internal, so the container is the default.
+      HOMEPAGE_VAR_DAGSTER_URL: ${PORTAL_DAGSTER_URL:-http://dagster:3000}
+    # Reaches Dagster and the dlt dashboard on the host (needed on Linux; built in on Docker Desktop).
     extra_hosts: ["host.docker.internal:host-gateway"]
-    ports: ["3002:3000"]
+    ports: ["127.0.0.1:3002:3000"]
     volumes: ["./portal/homepage:/app/config"]
+    # Healthcheck: the image's own (/api/healthcheck).
+    logging: *logging
     restart: unless-stopped
 
 volumes:
